@@ -37,7 +37,7 @@ namespace FolderComparerUI
             lvResults.MouseDoubleClick += LvResults_MouseDoubleClick;
             UpdateColumnWidths();
 
-            // Initialise RadioButton states to match the loaded ViewModel setting
+            // Sync RadioButtons to the persisted CompareModeTag after settings load
             SyncCompareModeRadios();
         }
 
@@ -52,7 +52,14 @@ namespace FolderComparerUI
         private void MetroWindow_SizeChanged(object sender, SizeChangedEventArgs e)
             => UpdateColumnWidths();
 
-        // ── Compare Mode RadioButton handlers ─────────────────────────────────
+        // ── Flyout Opened handlers — set ModeTag reliably when the popup appears ──
+        // The old hidden-ComboBox trick only worked when ModeTag already matched the
+        // single item's Tag.  When it didn't match, WPF found no item, left SelectedIndex=-1,
+        // and never wrote back — so the wrong operation ran.  Using Popup.Opened is reliable.
+        private void CopyFlyout_Opened(object sender, EventArgs e)   => VM.ModeTag = "3";
+        private void DeleteFlyout_Opened(object sender, EventArgs e) => VM.ModeTag = "2";
+
+        // ── Compare Mode RadioButton handlers ────────────────────────────────
         private void CompareMode_Normal_Checked(object sender, RoutedEventArgs e)
             => VM.CompareModeTag = "Normal";
 
@@ -60,8 +67,8 @@ namespace FolderComparerUI
             => VM.CompareModeTag = "HashOnly";
 
         /// <summary>
-        /// Syncs RadioButton IsChecked state from ViewModel after settings load.
-        /// Called once from Loaded so the radios reflect the persisted value.
+        /// Sets RadioButton IsChecked to match the ViewModel value loaded from settings.
+        /// Called once from MetroWindow_Loaded after LoadSettings().
         /// </summary>
         private void SyncCompareModeRadios()
         {
@@ -121,7 +128,7 @@ namespace FolderComparerUI
                 MainViewModel.RevealInExplorer(path);
         }
 
-        // ── ContextMenu: wire Commands + control visibility per category ──────
+        // ── ContextMenu: wire Commands + visibility per category ──────────────
         private void LvResults_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
             var container = lvResults.ItemContainerGenerator
@@ -148,7 +155,7 @@ namespace FolderComparerUI
                 };
             }
 
-            string cat = (VM.SelectedRow?.Category) ?? "";
+            string cat = VM.SelectedRow?.Category ?? "";
             bool hasLeft = !string.IsNullOrEmpty(VM.SelectedRow?.LeftFull);
             bool hasRight = !string.IsNullOrEmpty(VM.SelectedRow?.RightFull);
 
@@ -158,8 +165,7 @@ namespace FolderComparerUI
             SetMenuItemVisibility(menu, "ctxDeleteRight", hasRight);
             SetMenuItemVisibility(menu, "ctxDeleteBoth", hasLeft && hasRight);
 
-            bool anyAction = hasLeft || hasRight;
-            SetSeparatorVisibility(menu, "ctxActionSep", anyAction);
+            SetSeparatorVisibility(menu, "ctxActionSep", hasLeft || hasRight);
             SetSeparatorVisibility(menu, "ctxDeleteSep", hasLeft || hasRight);
         }
 
@@ -180,7 +186,7 @@ namespace FolderComparerUI
         // ── Column width calculation ──────────────────────────────────────────
         private void UpdateColumnWidths()
         {
-            // Intentionally empty — responsive layout handled by Grid column definitions.
+            // Intentionally empty — responsive layout handled by Grid * columns.
         }
 
         // ── Drag-drop ─────────────────────────────────────────────────────────
@@ -248,16 +254,11 @@ namespace FolderComparerUI
             }
         }
 
-        // ── Stub event handler (SelectedItem handled via binding) ─────────────
+        // ── Stub (SelectedItem handled via binding) ───────────────────────────
         private void lvResults_SelectionChanged(object sender, SelectionChangedEventArgs e) { }
 
         private static bool IsExt(string path, string ext) =>
             string.Equals(System.IO.Path.GetExtension(path), ext,
                 StringComparison.OrdinalIgnoreCase);
-
-        private void btnSortLeft_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }
