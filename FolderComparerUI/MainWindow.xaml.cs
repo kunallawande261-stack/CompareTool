@@ -16,6 +16,7 @@ namespace FolderComparerUI
     ///   4. ContextMenu Command wiring (WPF Style Setter limitation)
     ///   5. Drag-drop (raw WPF events — delegated to ViewModel properties)
     ///   6. Column width calculation (requires ActualWidth at runtime)
+    ///   7. Compare Mode RadioButton Checked events (StrToVis cannot set VM props)
     /// </summary>
     public partial class MainWindow : MahApps.Metro.Controls.MetroWindow
     {
@@ -35,6 +36,9 @@ namespace FolderComparerUI
                 new ScrollChangedEventHandler(ResultsScrollChanged));
             lvResults.MouseDoubleClick += LvResults_MouseDoubleClick;
             UpdateColumnWidths();
+
+            // Initialise RadioButton states to match the loaded ViewModel setting
+            SyncCompareModeRadios();
         }
 
         private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -47,6 +51,23 @@ namespace FolderComparerUI
 
         private void MetroWindow_SizeChanged(object sender, SizeChangedEventArgs e)
             => UpdateColumnWidths();
+
+        // ── Compare Mode RadioButton handlers ─────────────────────────────────
+        private void CompareMode_Normal_Checked(object sender, RoutedEventArgs e)
+            => VM.CompareModeTag = "Normal";
+
+        private void CompareMode_HashOnly_Checked(object sender, RoutedEventArgs e)
+            => VM.CompareModeTag = "HashOnly";
+
+        /// <summary>
+        /// Syncs RadioButton IsChecked state from ViewModel after settings load.
+        /// Called once from Loaded so the radios reflect the persisted value.
+        /// </summary>
+        private void SyncCompareModeRadios()
+        {
+            if (rdNormal != null) rdNormal.IsChecked = VM.CompareModeTag != "HashOnly";
+            if (rdHashOnly != null) rdHashOnly.IsChecked = VM.CompareModeTag == "HashOnly";
+        }
 
         // ── Infinite scroll ───────────────────────────────────────────────────
         private void ResultsScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -63,27 +84,22 @@ namespace FolderComparerUI
             string path = "";
             var hit = e.OriginalSource as DependencyObject;
 
-            // Walk up the visual tree — TextBlock is now inside Border inside Grid
-            // so we need to find the Grid ancestor and read the column from there.
             while (hit != null)
             {
                 if (hit is TextBlock tb)
                 {
-                    // Walk up past Border(s) to find the Grid
                     var parent = System.Windows.Media.VisualTreeHelper.GetParent(tb);
                     while (parent != null && parent is not Grid)
                         parent = System.Windows.Media.VisualTreeHelper.GetParent(parent);
 
                     if (parent is Grid)
                     {
-                        // Column index is on the Border or TextBlock — check both
                         int col = Grid.GetColumn(tb);
                         if (col == 0 || col == 2)
                         {
                             path = col == 0 ? row.LeftFull : row.RightFull;
                             break;
                         }
-                        // Try the parent Border
                         var border = System.Windows.Media.VisualTreeHelper.GetParent(tb);
                         if (border is Border b)
                         {
@@ -113,49 +129,38 @@ namespace FolderComparerUI
             var menu = container?.ContextMenu;
             if (menu == null) return;
 
-            // Wire commands every time (not once) so the correct SelectedRow
-            // is captured — the row changes on each right-click.
             foreach (var obj in menu.Items)
             {
                 if (obj is not MenuItem mi) continue;
                 mi.Command = mi.Name switch
                 {
-                    "ctxOpenLeftExplorer"  => VM.OpenLeftExplorerCommand,
+                    "ctxOpenLeftExplorer" => VM.OpenLeftExplorerCommand,
                     "ctxOpenRightExplorer" => VM.OpenRightExplorerCommand,
-                    "ctxBcLeft"            => VM.OpenLeftBcCommand,
-                    "ctxBcRight"           => VM.OpenRightBcCommand,
-                    "ctxBcCompare"         => VM.CompareBcCommand,
-                    "ctxCopyToRight"       => VM.QuickCopyToRightCommand,
-                    "ctxCopyToLeft"        => VM.QuickCopyToLeftCommand,
-                    "ctxDeleteLeft"        => VM.QuickDeleteLeftCommand,
-                    "ctxDeleteRight"       => VM.QuickDeleteRightCommand,
-                    "ctxDeleteBoth"        => VM.QuickDeleteBothCommand,
-                    _                      => mi.Command
+                    "ctxBcLeft" => VM.OpenLeftBcCommand,
+                    "ctxBcRight" => VM.OpenRightBcCommand,
+                    "ctxBcCompare" => VM.CompareBcCommand,
+                    "ctxCopyToRight" => VM.QuickCopyToRightCommand,
+                    "ctxCopyToLeft" => VM.QuickCopyToLeftCommand,
+                    "ctxDeleteLeft" => VM.QuickDeleteLeftCommand,
+                    "ctxDeleteRight" => VM.QuickDeleteRightCommand,
+                    "ctxDeleteBoth" => VM.QuickDeleteBothCommand,
+                    _ => mi.Command
                 };
             }
 
-            // Show/hide action items based on the selected row's category.
-            // Only show actions that make sense — avoid confusing users with
-            // greyed-out options that can never succeed.
             string cat = (VM.SelectedRow?.Category) ?? "";
-            bool hasLeft  = !string.IsNullOrEmpty(VM.SelectedRow?.LeftFull);
+            bool hasLeft = !string.IsNullOrEmpty(VM.SelectedRow?.LeftFull);
             bool hasRight = !string.IsNullOrEmpty(VM.SelectedRow?.RightFull);
 
-            // Copy to Right: only when left file exists (Left-Orphan or Different)
-            SetMenuItemVisibility(menu, "ctxCopyToRight",  hasLeft && !hasRight || cat == "Different");
-            // Copy to Left: only when right file exists (Right-Orphan or Different)
-            SetMenuItemVisibility(menu, "ctxCopyToLeft",   hasRight && !hasLeft || cat == "Different");
-            // Delete Left: only when left file exists
-            SetMenuItemVisibility(menu, "ctxDeleteLeft",   hasLeft);
-            // Delete Right: only when right file exists
-            SetMenuItemVisibility(menu, "ctxDeleteRight",  hasRight);
-            // Delete Both: only when both sides exist
-            SetMenuItemVisibility(menu, "ctxDeleteBoth",   hasLeft && hasRight);
+            SetMenuItemVisibility(menu, "ctxCopyToRight", hasLeft && !hasRight || cat == "Different");
+            SetMenuItemVisibility(menu, "ctxCopyToLeft", hasRight && !hasLeft || cat == "Different");
+            SetMenuItemVisibility(menu, "ctxDeleteLeft", hasLeft);
+            SetMenuItemVisibility(menu, "ctxDeleteRight", hasRight);
+            SetMenuItemVisibility(menu, "ctxDeleteBoth", hasLeft && hasRight);
 
-            // Show the action separator only when at least one action is visible
             bool anyAction = hasLeft || hasRight;
-            SetSeparatorVisibility(menu, "ctxActionSep",  anyAction);
-            SetSeparatorVisibility(menu, "ctxDeleteSep",  hasLeft || hasRight);
+            SetSeparatorVisibility(menu, "ctxActionSep", anyAction);
+            SetSeparatorVisibility(menu, "ctxDeleteSep", hasLeft || hasRight);
         }
 
         private static void SetMenuItemVisibility(ContextMenu menu, string name, bool visible)
@@ -173,27 +178,23 @@ namespace FolderComparerUI
         }
 
         // ── Column width calculation ──────────────────────────────────────────
-        // The header buttons live inside a Grid with * / 110 / * columns so
-        // they size themselves responsively. Nothing to compute manually here —
-        // the method is retained so SizeChanged still triggers a layout pass.
         private void UpdateColumnWidths()
         {
             // Intentionally empty — responsive layout handled by Grid column definitions.
-            // Kept to preserve the SizeChanged → UpdateColumnWidths call chain.
         }
 
         // ── Drag-drop ─────────────────────────────────────────────────────────
         private void TextBox_PreviewDragOver(object sender, DragEventArgs e)
         {
             if (!e.Data.GetDataPresent(DataFormats.FileDrop))
-                { e.Effects = DragDropEffects.None; e.Handled = true; return; }
+            { e.Effects = DragDropEffects.None; e.Handled = true; return; }
             var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
             if (paths == null || paths.Length == 0)
-                { e.Effects = DragDropEffects.None; e.Handled = true; return; }
+            { e.Effects = DragDropEffects.None; e.Handled = true; return; }
 
             string first = paths[0];
-            bool isDir   = System.IO.Directory.Exists(first);
-            bool isFile  = System.IO.File.Exists(first);
+            bool isDir = System.IO.Directory.Exists(first);
+            bool isFile = System.IO.File.Exists(first);
 
             if (sender is TextBox tb)
             {
@@ -253,5 +254,10 @@ namespace FolderComparerUI
         private static bool IsExt(string path, string ext) =>
             string.Equals(System.IO.Path.GetExtension(path), ext,
                 StringComparison.OrdinalIgnoreCase);
+
+        private void btnSortLeft_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
