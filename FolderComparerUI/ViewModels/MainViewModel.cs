@@ -620,7 +620,15 @@ namespace FolderComparerUI.ViewModels
                     RightFull = toRight ? dest         : row.RightFull
                 };
                 ReplaceRow(row, updated);
-
+                // Update the persistent count in the status bar
+                int total = _allResults.Count;
+                int same = _allResults.Count(r => r.Category == "Same");
+                int lonly = _allResults.Count(r => r.Category == "Left-Orphan");
+                int ronly = _allResults.Count(r => r.Category == "Right-Orphan");
+                int diff = _allResults.Count(r => r.Category == "Different");
+                ResultCountText =
+                    $"{total:N0} files  ·  Same: {same:N0}  " +
+                    $"Left-only: {lonly:N0}  Right-only: {ronly:N0}  Different: {diff:N0}";
                 StatusText = $"Copied to {(toRight ? "right" : "left")}: {row.Relative}";
             }
             catch (Exception ex)
@@ -703,6 +711,16 @@ namespace FolderComparerUI.ViewModels
                         RightFull = right ? "" : row.RightFull
                     };
                     ReplaceRow(row, updated);
+
+                    // Update the persistent count in the status bar
+                    int total = _allResults.Count;
+                    int same = _allResults.Count(r => r.Category == "Same");
+                    int lonly = _allResults.Count(r => r.Category == "Left-Orphan");
+                    int ronly = _allResults.Count(r => r.Category == "Right-Orphan");
+                    int diff = _allResults.Count(r => r.Category == "Different");
+                    ResultCountText =
+                        $"{total:N0} files  ·  Same: {same:N0}  " +
+                        $"Left-only: {lonly:N0}  Right-only: {ronly:N0}  Different: {diff:N0}";
                 }
 
                 StatusText = $"Deleted from {sides}: {row.Relative}";
