@@ -142,85 +142,225 @@
                  ROW 1  —  Flyout toggle buttons
                  ═══════════════════════════════════════════════════════ -->
             <Border DockPanel.Dock="Top"
-                    Background="#D8E8F5" BorderBrush="#B8CCDE" BorderThickness="0,0,0,1"
-                    Padding="8,5">
+                    Background="#D0E4F4" BorderBrush="#AECADF" BorderThickness="0,0,0,1"
+                    Padding="8,6">
+                <!-- All Popups must live inside the same visual tree as their PlacementTarget,
+                     so we keep everything in one Grid. The StackPanel is Left-docked; popups
+                     are siblings of it (they render as overlays, not in flow). -->
                 <Grid>
-                    <StackPanel Orientation="Horizontal">
-                        <ToggleButton x:Name="btnOptionsFlyout" Content="⚙ Options" Style="{StaticResource FlyoutToggleStyle}"/>
-                        <ToggleButton x:Name="btnCopyFlyout"    Content="⧉ Copy"    Style="{StaticResource FlyoutToggleStyle}"/>
-                        <ToggleButton x:Name="btnDeleteFlyout"  Content="⊟ Delete"  Style="{StaticResource FlyoutToggleStyle}"/>
-                        <ToggleButton x:Name="btnExcelFlyout"   Content="▦ Excel"   Style="{StaticResource FlyoutToggleStyle}"/>
+                    <!-- ── Toggle button row ── -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ToggleButton x:Name="btnOptionsFlyout"     Content="⚙ Options"      Style="{StaticResource FlyoutToggleStyle}"/>
+                        <ToggleButton x:Name="btnCompareModeFlyout" Content="⚖ Compare Mode" Style="{StaticResource FlyoutToggleStyle}"/>
+                        <ToggleButton x:Name="btnCopyFlyout"        Content="⧉ Copy"         Style="{StaticResource FlyoutToggleStyle}"/>
+                        <ToggleButton x:Name="btnDeleteFlyout"      Content="⊟ Delete"       Style="{StaticResource FlyoutToggleStyle}"/>
+                        <ToggleButton x:Name="btnExcelFlyout"       Content="▦ Excel"        Style="{StaticResource FlyoutToggleStyle}"/>
                     </StackPanel>
 
-                    <!-- OPTIONS popup -->
-                    <Popup Placement="Bottom" PlacementTarget="{Binding ElementName=btnOptionsFlyout}"
+                    <!-- ══════════════════════════════════════════════
+                         OPTIONS popup
+                         ══════════════════════════════════════════════ -->
+                    <Popup Placement="Bottom"
+                           PlacementTarget="{Binding ElementName=btnOptionsFlyout}"
                            IsOpen="{Binding IsChecked, ElementName=btnOptionsFlyout, Mode=TwoWay}"
                            StaysOpen="False" AllowsTransparency="True">
-                        <Border Background="White" BorderBrush="#BFD2E7" BorderThickness="1"
-                                CornerRadius="8" Padding="14,12" MinWidth="640">
+                        <Border Background="White" BorderBrush="#C2D8EE" BorderThickness="1"
+                                CornerRadius="8" Padding="16,14" MinWidth="420">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.14" Color="#1A3A5C"/>
+                            </Border.Effect>
                             <StackPanel>
-                                <TextBlock Text="Options" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="#1A3A5C" Margin="0,0,0,10"/>
-                                <WrapPanel>
-                                    <CheckBox Content="Enable logging"                      Margin="0,0,16,8" IsChecked="{Binding EnableLogging}"/>
-                                    <CheckBox Content="Smart XML compare (.xml .aml .svg)"  Margin="0,0,16,8" IsChecked="{Binding SmartXml}"/>
-                                    <CheckBox Content="Keep window topmost"                 Margin="0,0,16,8" IsChecked="{Binding Topmost}"/>
-                                    <CheckBox Content="Force re-read (ignore cache)"         Margin="0,0,16,8" IsChecked="{Binding ForceReread}"/>
-                                    <TextBlock Text="Compare mode:" VerticalAlignment="Center" Margin="0,0,8,8"/>
-                                    <ComboBox Width="220" Margin="0,0,0,8" SelectedValuePath="Tag" SelectedValue="{Binding CompareModeTag}">
-                                        <ComboBoxItem Tag="Normal">Normal (size + hash)</ComboBoxItem>
-                                        <ComboBoxItem Tag="HashOnly">Hash only (always hash)</ComboBoxItem>
-                                    </ComboBox>
-                                </WrapPanel>
-                                <DockPanel Margin="0,4,0,0"
-                                           Visibility="{Binding LogPathVisibility, Converter={StaticResource StrToVis}}">
-                                    <TextBlock Text="Log path:" Width="80" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="txtLogPath" Width="320" Margin="0,0,8,0"
+                                <!-- Header -->
+                                <DockPanel Margin="0,0,0,10">
+                                    <TextBlock Text="⚙" FontSize="14" Foreground="#1E5C9B"
+                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Options" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="#1A3A5C" VerticalAlignment="Center"/>
+                                </DockPanel>
+                                <Border Height="1" Background="#E4EEF8" Margin="0,0,0,12"/>
+
+                                <!-- Checkboxes -->
+                                <CheckBox Content="Enable logging"
+                                          IsChecked="{Binding EnableLogging}"
+                                          Margin="0,0,0,8" Cursor="Hand" FontSize="11"/>
+                                <CheckBox Content="Keep window topmost"
+                                          IsChecked="{Binding Topmost}"
+                                          Margin="0,0,0,12" Cursor="Hand" FontSize="11"/>
+
+                                <!-- Log path (shown only when logging enabled) -->
+                                <Grid Margin="0,0,0,10"
+                                      Visibility="{Binding LogPathVisibility, Converter={StaticResource StrToVis}}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="44"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Log path:"
+                                               VerticalAlignment="Center" FontSize="11" Foreground="#3A5A78"/>
+                                    <TextBox Grid.Column="1" x:Name="txtLogPath" Margin="0,0,6,0"
                                              Style="{StaticResource PathInputStyle}"
                                              Text="{Binding LogPath, UpdateSourceTrigger=PropertyChanged}"
                                              AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"/>
-                                    <Button Content="..." Width="42" Command="{Binding BrowseLogCommand}"
+                                    <Button Grid.Column="2" Content="..."
+                                            Command="{Binding BrowseLogCommand}"
                                             Style="{StaticResource SecondaryActionButtonStyle}"/>
-                                </DockPanel>
-                                <DockPanel Margin="0,10,0,0">
-                                    <TextBlock Text="Beyond Compare:" Width="120" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="txtBcPath" Width="240" Margin="0,0,8,0"
+                                </Grid>
+
+                                <!-- Beyond Compare row -->
+                                <Border Height="1" Background="#E4EEF8" Margin="0,0,0,10"/>
+                                <TextBlock Text="Beyond Compare" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="#3A5A78" Margin="0,0,0,8"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="40"/>
+                                        <ColumnDefinition Width="52"/>
+                                        <ColumnDefinition Width="52"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" x:Name="txtBcPath" Margin="0,0,6,0"
                                              Style="{StaticResource PathInputStyle}"
                                              Text="{Binding BcPath, UpdateSourceTrigger=PropertyChanged}"
-                                             AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"/>
-                                    <Button Content="..."   Width="40" Margin="0,0,5,0" Command="{Binding BrowseBcPathCommand}" Style="{StaticResource SecondaryActionButtonStyle}"/>
-                                    <Button Content="Save"  Width="52" Margin="0,0,5,0" Command="{Binding SaveBcPathCommand}"   Style="{StaticResource SecondaryActionButtonStyle}"/>
-                                    <Button Content="Clear" Width="52" Margin="0,0,8,0" Command="{Binding ClearBcPathCommand}"  Style="{StaticResource SecondaryActionButtonStyle}"/>
-                                    <TextBlock VerticalAlignment="Center" FontSize="11"
-                                               Text="{Binding BcStatusText}"
-                                               Foreground="{Binding BcStatusForeground, Converter={StaticResource StrToBrush}}"/>
-                                </DockPanel>
+                                             AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"
+                                             ToolTip="Path to BCompare.exe — leave blank to auto-detect"/>
+                                    <Button Grid.Column="1" Content="..." Margin="0,0,4,0"
+                                            Command="{Binding BrowseBcPathCommand}"
+                                            Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                    <Button Grid.Column="2" Content="Save" Margin="0,0,4,0"
+                                            Command="{Binding SaveBcPathCommand}"
+                                            Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                    <Button Grid.Column="3" Content="Clear"
+                                            Command="{Binding ClearBcPathCommand}"
+                                            Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                </Grid>
+                                <TextBlock Margin="0,5,0,0" FontSize="10"
+                                           Text="{Binding BcStatusText}"
+                                           Foreground="{Binding BcStatusForeground, Converter={StaticResource StrToBrush}}"/>
                             </StackPanel>
                         </Border>
                     </Popup>
 
-                    <!-- COPY popup -->
-                    <Popup Placement="Bottom" PlacementTarget="{Binding ElementName=btnCopyFlyout}"
+                    <!-- ══════════════════════════════════════════════
+                         COMPARE MODE popup
+                         ══════════════════════════════════════════════ -->
+                    <Popup Placement="Bottom"
+                           PlacementTarget="{Binding ElementName=btnCompareModeFlyout}"
+                           IsOpen="{Binding IsChecked, ElementName=btnCompareModeFlyout, Mode=TwoWay}"
+                           StaysOpen="False" AllowsTransparency="True">
+                        <Border Background="White" BorderBrush="#C2D8EE" BorderThickness="1"
+                                CornerRadius="8" Padding="16,14" MinWidth="310">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.14" Color="#1A3A5C"/>
+                            </Border.Effect>
+                            <StackPanel>
+                                <!-- Header -->
+                                <DockPanel Margin="0,0,0,10">
+                                    <TextBlock Text="⚖" FontSize="14" Foreground="#1E5C9B"
+                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Compare Mode" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="#1A3A5C" VerticalAlignment="Center"/>
+                                </DockPanel>
+                                <Border Height="1" Background="#E4EEF8" Margin="0,0,0,12"/>
+
+                                <!-- Smart XML card -->
+                                <Border Background="#F3F8FE" CornerRadius="6" Padding="10,9" Margin="0,0,0,8">
+                                    <CheckBox IsChecked="{Binding SmartXml}" Cursor="Hand">
+                                        <CheckBox.Content>
+                                            <StackPanel Margin="4,0,0,0">
+                                                <TextBlock Text="Smart XML Compare"
+                                                           FontWeight="SemiBold" FontSize="11" Foreground="#1A3A5C"/>
+                                                <TextBlock Text="Normalises .xml / .aml / .svg before diff"
+                                                           FontSize="10" Foreground="#6B8AAA" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                        </CheckBox.Content>
+                                    </CheckBox>
+                                </Border>
+
+                                <!-- Force Re-read card -->
+                                <Border Background="#F3F8FE" CornerRadius="6" Padding="10,9" Margin="0,0,0,8">
+                                    <CheckBox IsChecked="{Binding ForceReread}" Cursor="Hand">
+                                        <CheckBox.Content>
+                                            <StackPanel Margin="4,0,0,0">
+                                                <TextBlock Text="Force Re-read"
+                                                           FontWeight="SemiBold" FontSize="11" Foreground="#1A3A5C"/>
+                                                <TextBlock Text="Bypass hash cache — re-read all files from disk"
+                                                           FontSize="10" Foreground="#6B8AAA" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                        </CheckBox.Content>
+                                    </CheckBox>
+                                </Border>
+
+                                <!-- Hash Strategy card -->
+                                <Border Background="#F3F8FE" CornerRadius="6" Padding="10,9">
+                                    <StackPanel>
+                                        <TextBlock Text="Hash Strategy" FontWeight="SemiBold"
+                                                   FontSize="11" Foreground="#1A3A5C" Margin="0,0,0,8"/>
+                                        <RadioButton x:Name="rdNormal"
+                                                     GroupName="CompareMode" FontSize="11" Cursor="Hand"
+                                                     Margin="0,0,0,5"
+                                                     Checked="CompareMode_Normal_Checked">
+                                            <RadioButton.Content>
+                                                <StackPanel>
+                                                    <TextBlock Text="Normal" FontWeight="SemiBold"
+                                                               FontSize="11" Foreground="#1A3A5C"/>
+                                                    <TextBlock Text="Size mismatch → skip hash  (faster)"
+                                                               FontSize="10" Foreground="#6B8AAA" Margin="0,1,0,0"/>
+                                                </StackPanel>
+                                            </RadioButton.Content>
+                                        </RadioButton>
+                                        <RadioButton x:Name="rdHashOnly"
+                                                     GroupName="CompareMode" FontSize="11" Cursor="Hand"
+                                                     Checked="CompareMode_HashOnly_Checked">
+                                            <RadioButton.Content>
+                                                <StackPanel>
+                                                    <TextBlock Text="Hash Only" FontWeight="SemiBold"
+                                                               FontSize="11" Foreground="#1A3A5C"/>
+                                                    <TextBlock Text="Always hash regardless of size  (thorough)"
+                                                               FontSize="10" Foreground="#6B8AAA" Margin="0,1,0,0"/>
+                                                </StackPanel>
+                                            </RadioButton.Content>
+                                        </RadioButton>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+
+                    <!-- ══════════════════════════════════════════════
+                         COPY popup
+                         ══════════════════════════════════════════════ -->
+                    <Popup Placement="Bottom"
+                           PlacementTarget="{Binding ElementName=btnCopyFlyout}"
                            IsOpen="{Binding IsChecked, ElementName=btnCopyFlyout, Mode=TwoWay}"
                            StaysOpen="False" AllowsTransparency="True">
-                        <Border Background="White" BorderBrush="#BFD2E7" BorderThickness="1"
-                                CornerRadius="8" Padding="14,12" MinWidth="600">
+                        <!-- Hidden combo forces ModeTag = "3" (Copy) when this flyout is used -->
+                        <Border Background="White" BorderBrush="#C2D8EE" BorderThickness="1"
+                                CornerRadius="8" Padding="16,0,16,14" MinWidth="350">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.14" Color="#1A3A5C"/>
+                            </Border.Effect>
                             <StackPanel>
                                 <ComboBox Width="1" Height="1" Opacity="0" IsHitTestVisible="False"
                                           SelectedValuePath="Tag" SelectedValue="{Binding ModeTag}">
                                     <ComboBoxItem Tag="3">Copy</ComboBoxItem>
                                 </ComboBox>
-                                <TextBlock Text="Copy files" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="#1A3A5C" Margin="0,0,0,10"/>
-                                <Grid>
+                                <!-- Header -->
+                                <DockPanel Margin="0,0,0,10">
+                                    <TextBlock Text="⧉" FontSize="14" Foreground="#1E5C9B"
+                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Copy Files" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="#1A3A5C" VerticalAlignment="Center"/>
+                                </DockPanel>
+                                <Border Height="1" Background="#E4EEF8" Margin="0,0,0,12"/>
+
+                                <!-- Target set row -->
+                                <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="80"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Target set:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <ComboBox Grid.Column="1" Margin="0,0,8,0" SelectedValuePath="Tag" SelectedValue="{Binding TargetTag}">
+                                    <TextBlock Grid.Column="0" Text="Target set:"
+                                               VerticalAlignment="Center" FontSize="11" Foreground="#3A5A78"/>
+                                    <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{Binding TargetTag}">
                                         <ComboBoxItem Tag="2">Left-Orphans</ComboBoxItem>
                                         <ComboBoxItem Tag="3">Right-Orphans</ComboBoxItem>
                                         <ComboBoxItem Tag="4L">Different — Left folder only</ComboBoxItem>
@@ -230,49 +370,80 @@
                                         <ComboBoxItem Tag="CL">Copy entire Left folder</ComboBoxItem>
                                         <ComboBoxItem Tag="CR">Copy entire Right folder</ComboBoxItem>
                                     </ComboBox>
-                                    <Button Grid.Column="2" Content="Start"  Width="88" Margin="0,0,6,0"
-                                            Command="{Binding StartCommand}" Style="{StaticResource PrimaryActionButtonStyle}"/>
-                                    <Button Grid.Column="3" Content="Cancel" Width="88"
-                                            Command="{Binding CancelCommand}" Style="{StaticResource SecondaryActionButtonStyle}"/>
                                 </Grid>
-                                <DockPanel Margin="0,10,0,0">
-                                    <TextBlock Text="Copy destination:" Width="110" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="txtExportPath" Width="330" Margin="0,0,8,0"
+
+                                <!-- Destination row -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="44"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Destination:"
+                                               VerticalAlignment="Center" FontSize="11" Foreground="#3A5A78"/>
+                                    <TextBox Grid.Column="1" x:Name="txtExportPath" Margin="0,0,6,0"
                                              Style="{StaticResource PathInputStyle}"
                                              Text="{Binding ExportPath, UpdateSourceTrigger=PropertyChanged}"
                                              AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"/>
-                                    <Button Content="..." Width="42" Command="{Binding BrowseExportCommand}"
+                                    <Button Grid.Column="2" Content="..."
+                                            Command="{Binding BrowseExportCommand}"
                                             Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                </Grid>
+
+                                <!-- Options + actions -->
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Left" Content="Category subfolders"
+                                              IsChecked="{Binding CategorySubfolders}"
+                                              VerticalAlignment="Center" FontSize="11" Cursor="Hand"/>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                                                HorizontalAlignment="Right">
+                                        <Button Content="▶ Start" Width="90" Margin="0,0,8,0"
+                                                Command="{Binding StartCommand}"
+                                                Style="{StaticResource PrimaryActionButtonStyle}"/>
+                                        <Button Content="✕ Cancel" Width="78"
+                                                Command="{Binding CancelCommand}"
+                                                Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                    </StackPanel>
                                 </DockPanel>
-                                <CheckBox Content="Create category subfolders" Margin="0,10,0,0"
-                                          IsChecked="{Binding CategorySubfolders}"/>
                             </StackPanel>
                         </Border>
                     </Popup>
 
-                    <!-- DELETE popup -->
-                    <Popup Placement="Bottom" PlacementTarget="{Binding ElementName=btnDeleteFlyout}"
+                    <!-- ══════════════════════════════════════════════
+                         DELETE popup
+                         ══════════════════════════════════════════════ -->
+                    <Popup Placement="Bottom"
+                           PlacementTarget="{Binding ElementName=btnDeleteFlyout}"
                            IsOpen="{Binding IsChecked, ElementName=btnDeleteFlyout, Mode=TwoWay}"
                            StaysOpen="False" AllowsTransparency="True">
-                        <Border Background="White" BorderBrush="#BFD2E7" BorderThickness="1"
-                                CornerRadius="8" Padding="14,12" MinWidth="600">
+                        <Border Background="White" BorderBrush="#C2D8EE" BorderThickness="1"
+                                CornerRadius="8" Padding="16,0,16,14" MinWidth="350">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.14" Color="#1A3A5C"/>
+                            </Border.Effect>
                             <StackPanel>
                                 <ComboBox Width="1" Height="1" Opacity="0" IsHitTestVisible="False"
                                           SelectedValuePath="Tag" SelectedValue="{Binding ModeTag}">
                                     <ComboBoxItem Tag="2">Delete</ComboBoxItem>
                                 </ComboBox>
-                                <TextBlock Text="Delete files" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="#1A3A5C" Margin="0,0,0,10"/>
-                                <Grid>
+                                <!-- Header -->
+                                <DockPanel Margin="0,0,0,10">
+                                    <TextBlock Text="⊟" FontSize="14" Foreground="#B03A2E"
+                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Delete Files" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="#1A3A5C" VerticalAlignment="Center"/>
+                                </DockPanel>
+                                <Border Height="1" Background="#E4EEF8" Margin="0,0,0,12"/>
+
+                                <!-- Target set row -->
+                                <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="80"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Target set:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <ComboBox Grid.Column="1" Margin="0,0,8,0" SelectedValuePath="Tag" SelectedValue="{Binding TargetTag}">
+                                    <TextBlock Grid.Column="0" Text="Target set:"
+                                               VerticalAlignment="Center" FontSize="11" Foreground="#3A5A78"/>
+                                    <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{Binding TargetTag}">
                                         <ComboBoxItem Tag="2">Left-Orphans</ComboBoxItem>
                                         <ComboBoxItem Tag="3">Right-Orphans</ComboBoxItem>
                                         <ComboBoxItem Tag="4">Different (both sides)</ComboBoxItem>
@@ -283,57 +454,101 @@
                                         <ComboBoxItem Tag="1L">Same — Left folder only</ComboBoxItem>
                                         <ComboBoxItem Tag="1R">Same — Right folder only</ComboBoxItem>
                                     </ComboBox>
-                                    <CheckBox Grid.Column="2" Content="Keep root if empty" VerticalAlignment="Center"
-                                              Margin="0,0,10,0"
-                                              IsChecked="{Binding KeepRoot}"
-                                              Visibility="{Binding KeepRootVisibility, Converter={StaticResource StrToVis}}"/>
-                                    <Button Grid.Column="3" Content="Start"  Width="88" Margin="0,0,6,0"
-                                            Command="{Binding StartCommand}" Style="{StaticResource PrimaryActionButtonStyle}"/>
-                                    <Button Grid.Column="4" Content="Cancel" Width="88"
-                                            Command="{Binding CancelCommand}" Style="{StaticResource SecondaryActionButtonStyle}"/>
                                 </Grid>
+
+                                <!-- Options + actions -->
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Left" Content="Keep root if empty"
+                                              IsChecked="{Binding KeepRoot}"
+                                              Visibility="{Binding KeepRootVisibility, Converter={StaticResource StrToVis}}"
+                                              VerticalAlignment="Center" FontSize="11" Cursor="Hand"/>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                                                HorizontalAlignment="Right">
+                                        <Button Content="▶ Start" Width="90" Margin="0,0,8,0"
+                                                Command="{Binding StartCommand}"
+                                                Style="{StaticResource PrimaryActionButtonStyle}"/>
+                                        <Button Content="✕ Cancel" Width="78"
+                                                Command="{Binding CancelCommand}"
+                                                Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                    </StackPanel>
+                                </DockPanel>
                             </StackPanel>
                         </Border>
                     </Popup>
 
-                    <!-- EXCEL popup -->
-                    <Popup Placement="Bottom" PlacementTarget="{Binding ElementName=btnExcelFlyout}"
+                    <!-- ══════════════════════════════════════════════
+                         EXCEL popup
+                         ══════════════════════════════════════════════ -->
+                    <Popup Placement="Bottom"
+                           PlacementTarget="{Binding ElementName=btnExcelFlyout}"
                            IsOpen="{Binding IsChecked, ElementName=btnExcelFlyout, Mode=TwoWay}"
                            StaysOpen="False" AllowsTransparency="True">
-                        <Border Background="White" BorderBrush="#BFD2E7" BorderThickness="1"
-                                CornerRadius="8" Padding="14,12" MinWidth="560">
+                        <Border Background="White" BorderBrush="#C2D8EE" BorderThickness="1"
+                                CornerRadius="8" Padding="16,14" MinWidth="350">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.14" Color="#1A3A5C"/>
+                            </Border.Effect>
                             <StackPanel>
-                                <TextBlock Text="Export to Excel" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="#1A3A5C" Margin="0,0,0,10"/>
+                                <!-- Header -->
                                 <DockPanel Margin="0,0,0,10">
-                                    <TextBlock Text="Excel path:" Width="76" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="txtExcelPath" Width="330" Margin="0,0,8,0"
+                                    <TextBlock Text="▦" FontSize="14" Foreground="#1E5C9B"
+                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Export to Excel" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="#1A3A5C" VerticalAlignment="Center"/>
+                                </DockPanel>
+                                <Border Height="1" Background="#E4EEF8" Margin="0,0,0,12"/>
+
+                                <!-- Excel path row -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="44"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Save to:"
+                                               VerticalAlignment="Center" FontSize="11" Foreground="#3A5A78"/>
+                                    <TextBox Grid.Column="1" x:Name="txtExcelPath" Margin="0,0,6,0"
                                              Style="{StaticResource PathInputStyle}"
                                              Text="{Binding ExcelPath, UpdateSourceTrigger=PropertyChanged}"
                                              AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"/>
-                                    <Button Content="..." Width="42" Command="{Binding BrowseExcelCommand}"
+                                    <Button Grid.Column="2" Content="..."
+                                            Command="{Binding BrowseExcelCommand}"
                                             Style="{StaticResource SecondaryActionButtonStyle}"/>
-                                </DockPanel>
+                                </Grid>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="44"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Sheet name:"
+                                            VerticalAlignment="Center" FontSize="11"
+                                            Foreground="#3A5A78" Margin="0,0,6,0"/>
+                                    <TextBox Grid.Column="1" Margin="0,0,10,0"
+                                              Style="{StaticResource PathInputStyle}"
+                                              MaxLength="31"
+                                              Text="{Binding SheetName, UpdateSourceTrigger=PropertyChanged}"/>
+                                </Grid>
+                                <!-- Category + Sheet name + Export button -->
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="180"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="180"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="160"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="90"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Category:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <ComboBox Grid.Column="1" Margin="0,0,14,0" SelectedValuePath="Tag" SelectedValue="{Binding ExcelCategoryTag}">
+                                    <TextBlock Grid.Column="0" Text="Category:"
+                                               VerticalAlignment="Center" FontSize="11" Foreground="#3A5A78"/>
+                                    <ComboBox Grid.Column="1" Margin="0,0,12,0"
+                                              SelectedValuePath="Tag" SelectedValue="{Binding ExcelCategoryTag}">
                                         <ComboBoxItem Tag="1">Same</ComboBoxItem>
                                         <ComboBoxItem Tag="2">Left-Orphans</ComboBoxItem>
                                         <ComboBoxItem Tag="3">Right-Orphans</ComboBoxItem>
                                         <ComboBoxItem Tag="4">Different</ComboBoxItem>
                                         <ComboBoxItem Tag="5">All</ComboBoxItem>
                                     </ComboBox>
-                                    <TextBlock Grid.Column="2" Text="Sheet name:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBox Grid.Column="3" Margin="0,0,10,0" Style="{StaticResource PathInputStyle}"
-                                             MaxLength="31" Text="{Binding SheetName, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <Button Grid.Column="4" Content="Export" Width="90"
+                                    <Button Grid.Column="2" Content="▦ Export"
                                             Command="{Binding ExportExcelCommand}"
                                             Style="{StaticResource PrimaryActionButtonStyle}"/>
                                 </Grid>
@@ -344,67 +559,94 @@
             </Border>
 
             <!-- ═══════════════════════════════════════════════════════
-                 ROW 2  —  Action buttons  +  View / Exclude  (inline)
+                 ROW 2  —  Action buttons (left)  +  Search / Filter (right)
                  ═══════════════════════════════════════════════════════ -->
             <Border DockPanel.Dock="Top"
                     Background="#EAF1F9" BorderBrush="#C5D5E5" BorderThickness="0,0,0,1"
                     Padding="8,5">
-                <DockPanel LastChildFill="False">
-                    <!-- Action buttons -->
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                        <Button Content="▶ Start"   Command="{Binding AnalyzeCommand}"     Style="{StaticResource TopToolButtonStyle}"/>
-                        <Button Content="↺ Reload"  Command="{Binding ReloadCommand}"      Style="{StaticResource TopToolButtonStyle}"/>
-                        <Button Content="↗ Excel"   Command="{Binding ExportExcelCommand}" Style="{StaticResource TopToolButtonStyle}"/>
-                        <Button Content="✕ Cancel"  Command="{Binding CancelCommand}"      Style="{StaticResource TopToolButtonStyle}"/>
+                <DockPanel LastChildFill="False" VerticalAlignment="Center">
+
+                    <!-- ── Left: primary action buttons ── -->
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                        <Button Content="▶ Start"  Command="{Binding AnalyzeCommand}"     Style="{StaticResource TopToolButtonStyle}"/>
+                        <Button Content="↺ Reload" Command="{Binding ReloadCommand}"      Style="{StaticResource TopToolButtonStyle}"/>
+                        <Button Content="↗ Excel"  Command="{Binding ExportExcelCommand}" Style="{StaticResource TopToolButtonStyle}"/>
+                        <Button Content="✕ Cancel" Command="{Binding CancelCommand}"      Style="{StaticResource TopToolButtonStyle}"/>
                     </StackPanel>
 
-                    <!-- Divider -->
-                    <Border DockPanel.Dock="Left" Width="1" Background="#BDD0E2" Margin="6,3"/>
+                    <!-- ── Divider ── -->
+                    <Border DockPanel.Dock="Left" Width="1" Background="#BDD0E2" Margin="6,3" VerticalAlignment="Stretch"/>
 
-                    <!-- View (dropdown) moved to the search-button position and Search button moved to previous view position.
-                         Dropdown supports multiple selections (check boxes bound to existing Show* properties). -->
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                    <!-- ── Right: search, view filter, exclude, clear  ──
+                         DockPanel.Dock="Right" keeps this group flush-right
+                         while the action buttons stay left. -->
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right"
+                                VerticalAlignment="Center" Margin="0,0,2,0">
 
-                        <!-- SEARCH button moved to the previous View combobox position -->
-                        <Button Content="🔍" Width="32" Height="26" Margin="8,0,0,0" Padding="0"
-        Command="{Binding AnalyzeCommand}"
-        Background="#EAF2FB" BorderBrush="#BFD2E7" BorderThickness="1" Cursor="Hand"/>
-                        <!-- Filter text box -->
-                        <TextBox Width="155" Height="26" Padding="6,0" VerticalContentAlignment="Center"
-                                 Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="Filter all columns (relative path / category)"
-                                 BorderBrush="#C9D8E8" BorderThickness="1"/>
-                        <TextBlock Text="View:" VerticalAlignment="Center" Foreground="#2C4966"
-            FontSize="11" FontWeight="SemiBold" Margin="0,0,5,0"/>
-                        <!-- VIEW dropdown (was where the search icon used to be) -->
-                        <ToggleButton x:Name="btnViewDrop" Width="32" Height="26" Margin="6,0,0,0"
-                                      Padding="0" Content="▾" Cursor="Hand" Background="#EAF2FB" BorderBrush="#BFD2E7"
-                                      BorderThickness="1"/>
-                        <Popup Placement="Bottom" PlacementTarget="{Binding ElementName=btnViewDrop}"
-                               IsOpen="{Binding IsChecked, ElementName=btnViewDrop, Mode=TwoWay}"
-                               StaysOpen="False" AllowsTransparency="True">
-                            <Border Background="White" BorderBrush="#BFD2E7" BorderThickness="1" CornerRadius="6" Padding="10" MinWidth="200">
-                                <StackPanel>
-                                    <TextBlock Text="View filter" FontWeight="SemiBold" Foreground="#1A3A5C" Margin="0,0,0,8"/>
-                                    <StackPanel Orientation="Vertical">
-                                        <CheckBox Content="Same"       IsChecked="{Binding ShowSame}"        Style="{StaticResource CatCheckStyle}"/>
-                                        <CheckBox Content="Different"  IsChecked="{Binding ShowDifferent}"   Style="{StaticResource CatCheckStyle}"/>
-                                        <CheckBox Content="Left only"  IsChecked="{Binding ShowLeftOrphan}"  Style="{StaticResource CatCheckStyle}"/>
-                                        <CheckBox Content="Right only" IsChecked="{Binding ShowRightOrphan}" Style="{StaticResource CatCheckStyle}"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-                        </Popup>
-
-                        <TextBlock Text="Exclude:" VerticalAlignment="Center" Foreground="#2C4966"
-                                   FontSize="11" FontWeight="SemiBold" Margin="10,0,5,0"/>
-                        <TextBox Width="155" Height="26" Padding="6,0" VerticalContentAlignment="Center"
+                        <!-- Exclude label + box -->
+                        <TextBlock Text="Exclude:" VerticalAlignment="Center"
+                                   FontSize="11" FontWeight="SemiBold"
+                                   Foreground="#2C4966" Margin="0,0,5,0"/>
+                        <TextBox Width="140" Height="26" Padding="6,0"
+                                 VerticalContentAlignment="Center"
                                  Text="{Binding ExcludePatterns, UpdateSourceTrigger=PropertyChanged}"
                                  ToolTip="Exclude patterns: .ext  folder  *.tmp"
                                  BorderBrush="#C9D8E8" BorderThickness="1"/>
 
-                        <Button Content="✕ Clear" Command="{Binding ClearFilterCommand}"
-                                Margin="8,0,0,0" Height="26" Padding="8,0"
+                        <!-- Thin divider -->
+                        <Border Width="1" Background="#C5D5E5" Margin="8,2" VerticalAlignment="Stretch"/>
+
+                        <!-- View filter toggle -->
+                        <TextBlock Text="View:" VerticalAlignment="Center"
+                                   FontSize="11" FontWeight="SemiBold"
+                                   Foreground="#2C4966" Margin="0,0,5,0"/>
+                        <ToggleButton x:Name="btnViewDrop"
+                                      Width="30" Height="26" Padding="0"
+                                      Content="▾" Cursor="Hand"
+                                      Background="#EAF2FB" BorderBrush="#BFD2E7" BorderThickness="1"
+                                      FontSize="12" VerticalContentAlignment="Center"/>
+                        <Popup Placement="Bottom"
+                               PlacementTarget="{Binding ElementName=btnViewDrop}"
+                               IsOpen="{Binding IsChecked, ElementName=btnViewDrop, Mode=TwoWay}"
+                               StaysOpen="False" AllowsTransparency="True">
+                            <Border Background="White" BorderBrush="#C2D8EE" BorderThickness="1"
+                                    CornerRadius="7" Padding="12,10" MinWidth="170">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.13" Color="#1A3A5C"/>
+                                </Border.Effect>
+                                <StackPanel>
+                                    <TextBlock Text="Show categories" FontWeight="SemiBold"
+                                               FontSize="11" Foreground="#1A3A5C" Margin="0,0,0,8"/>
+                                    <CheckBox Content="Same"       IsChecked="{Binding ShowSame}"        Style="{StaticResource CatCheckStyle}"/>
+                                    <CheckBox Content="Different"  IsChecked="{Binding ShowDifferent}"   Style="{StaticResource CatCheckStyle}"/>
+                                    <CheckBox Content="Left only"  IsChecked="{Binding ShowLeftOrphan}"  Style="{StaticResource CatCheckStyle}"/>
+                                    <CheckBox Content="Right only" IsChecked="{Binding ShowRightOrphan}" Style="{StaticResource CatCheckStyle}"/>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+
+                        <!-- Thin divider -->
+                        <Border Width="1" Background="#C5D5E5" Margin="8,2" VerticalAlignment="Stretch"/>
+
+                        <!-- Search icon + filter box -->
+                        <Border Background="#EAF2FB" BorderBrush="#BFD2E7" BorderThickness="1"
+                                CornerRadius="4" Height="26" Padding="6,0">
+                            <DockPanel>
+                                <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets"
+                                           FontSize="12" Opacity="0.6" Foreground="#1A3A5C"
+                                           VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBox Width="150" VerticalContentAlignment="Center"
+                                         Background="Transparent" BorderThickness="0"
+                                         Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Filter by path or category"/>
+                            </DockPanel>
+                        </Border>
+
+                        <!-- Clear filter button (only when filter active) -->
+                        <Button Content="✕" Width="26" Height="26" Margin="4,0,0,0"
+                                Padding="0"
+                                Command="{Binding ClearFilterCommand}"
+                                ToolTip="Clear all filters"
                                 Background="#F5E0E0" Foreground="#8B1A1A"
                                 BorderBrush="#D9AAAA" BorderThickness="1"
                                 FontSize="11" FontWeight="SemiBold" Cursor="Hand"
@@ -504,13 +746,14 @@
                             <ColumnDefinition Width="*" MinWidth="200"/>
                             <ColumnDefinition Width="110"/>
                             <ColumnDefinition Width="*" MinWidth="200"/>
+                            <ColumnDefinition Width="17."/>
                         </Grid.ColumnDefinitions>
 
                         <Button x:Name="btnSortLeft" Grid.Column="0"
                                 Content="{Binding SortLeftHeader}" Command="{Binding SortLeftCommand}"
                                 Height="32" Foreground="White" FontWeight="SemiBold" FontSize="12"
                                 Background="Transparent" BorderThickness="0,0,1,0" BorderBrush="#4E88BD"
-                                HorizontalContentAlignment="Left" Padding="10,0"/>
+                                HorizontalContentAlignment="Center" Padding="10,0"/>
 
                         <Button x:Name="btnSortCategory" Grid.Column="1"
                                 Content="{Binding SortCategoryHeader}" Command="{Binding SortCategoryCommand}"
@@ -522,7 +765,7 @@
                                 Content="{Binding SortRightHeader}" Command="{Binding SortRightCommand}"
                                 Height="32" Foreground="White" FontWeight="SemiBold" FontSize="12"
                                 Background="Transparent" BorderThickness="1,0,0,0" BorderBrush="#4E88BD"
-                                HorizontalContentAlignment="Left" Padding="10,0"/>
+                                HorizontalContentAlignment="Center" Padding="10,0"/>
                     </Grid>
 
                     <!-- ── Results ListView ── -->
