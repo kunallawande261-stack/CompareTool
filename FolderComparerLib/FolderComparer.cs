@@ -23,10 +23,16 @@ namespace FolderComparerLib
         public IReadOnlySet<string> RightOnly => _rightOnly;
         public IReadOnlySet<string> Different => _different;
 
-        internal void AddSame(string rel)      => _same.Add(rel);
-        internal void AddLeftOnly(string rel)  => _leftOnly.Add(rel);
-        internal void AddRightOnly(string rel) => _rightOnly.Add(rel);
-        internal void AddDifferent(string rel) => _different.Add(rel);
+        internal void AddSame(string rel)         => _same.Add(rel);
+        internal void AddLeftOnly(string rel)     => _leftOnly.Add(rel);
+        internal void AddRightOnly(string rel)    => _rightOnly.Add(rel);
+        internal void AddDifferent(string rel)    => _different.Add(rel);
+
+        // Used by the UI layer to keep CompareResult in sync after quick (per-row) actions.
+        internal void RemoveSame(string rel)      => _same.Remove(rel);
+        internal void RemoveLeftOnly(string rel)  => _leftOnly.Remove(rel);
+        internal void RemoveRightOnly(string rel) => _rightOnly.Remove(rel);
+        internal void RemoveDifferent(string rel) => _different.Remove(rel);
     }
 
     /// <summary>

@@ -727,11 +727,23 @@
                                 Background="Transparent" BorderThickness="1,0,1,0" BorderBrush="#4E88BD"
                                 HorizontalContentAlignment="Center"/>
 
-                        <Button x:Name="btnSortRight" Grid.Column="2"
-                                Content="{Binding SortRightHeader}" Command="{Binding SortRightCommand}"
-                                Height="32" Foreground="White" FontWeight="SemiBold" FontSize="12"
-                                Background="Transparent" BorderThickness="1,0,0,0" BorderBrush="#4E88BD"
-                                HorizontalContentAlignment="Center" Padding="10,0"/>
+                        <!-- Right header + inline Clear Sort button -->
+                        <DockPanel Grid.Column="2" LastChildFill="True">
+                            <Button DockPanel.Dock="Right"
+                                    Content="✕" ToolTip="Clear sort"
+                                    Command="{Binding ClearSortCommand}"
+                                    Visibility="{Binding SortIsActive, Converter={StaticResource StrToVis}}"
+                                    Width="26" Height="26" Padding="0"
+                                    Margin="0,3,4,3"
+                                    Background="#1A5490" Foreground="#AACFEE"
+                                    BorderBrush="#4E88BD" BorderThickness="1"
+                                    FontSize="11" FontWeight="SemiBold" Cursor="Hand"/>
+                            <Button x:Name="btnSortRight"
+                                    Content="{Binding SortRightHeader}" Command="{Binding SortRightCommand}"
+                                    Height="32" Foreground="White" FontWeight="SemiBold" FontSize="12"
+                                    Background="Transparent" BorderThickness="1,0,0,0" BorderBrush="#4E88BD"
+                                    HorizontalContentAlignment="Center" Padding="10,0"/>
+                        </DockPanel>
                     </Grid>
 
                     <!-- ── Results ListView ── -->
