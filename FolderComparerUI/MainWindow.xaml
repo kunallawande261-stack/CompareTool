@@ -126,6 +126,83 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
+
+        <!-- ── Shared flyout design system ─────────────────────────────── -->
+
+        <Style x:Key="FlyoutBorderStyle" TargetType="Border">
+            <Setter Property="Background"       Value="White"/>
+            <Setter Property="BorderBrush"      Value="#C2D8EE"/>
+            <Setter Property="BorderThickness"  Value="1"/>
+            <Setter Property="CornerRadius"     Value="10"/>
+            <Setter Property="Padding"          Value="18,16"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="5" Opacity="0.13" Color="#1A3A5C"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FlyoutHeaderPanelStyle" TargetType="DockPanel">
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+
+        <Style x:Key="FlyoutIconBorderStyle" TargetType="Border">
+            <Setter Property="Width"        Value="32"/>
+            <Setter Property="Height"       Value="32"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Margin"       Value="0,0,10,0"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment"   Value="Center"/>
+        </Style>
+
+        <Style x:Key="FlyoutIconTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize"            Value="15"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment"   Value="Center"/>
+        </Style>
+
+        <Style x:Key="FlyoutTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize"          Value="14"/>
+            <Setter Property="FontWeight"        Value="SemiBold"/>
+            <Setter Property="Foreground"        Value="#1A3A5C"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="FlyoutSectionLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize"        Value="9"/>
+            <Setter Property="FontWeight"      Value="Bold"/>
+            <Setter Property="Foreground"      Value="#8AAAC4"/>
+            <Setter Property="Margin"          Value="0,0,0,5"/>
+          
+        </Style>
+
+        <Style x:Key="FlyoutCardStyle" TargetType="Border">
+            <Setter Property="Background"      Value="#F4F8FD"/>
+            <Setter Property="BorderBrush"     Value="#DCE9F5"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"    Value="8"/>
+            <Setter Property="Padding"         Value="14,12"/>
+            <Setter Property="Margin"          Value="0,0,0,12"/>
+        </Style>
+
+        <Style x:Key="FlyoutCheckStyle" TargetType="CheckBox">
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize"  Value="11"/>
+            <Setter Property="Cursor"    Value="Hand"/>
+        </Style>
+
+        <Style x:Key="FlyoutCheckTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize"   Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#1A3A5C"/>
+        </Style>
+
+        <Style x:Key="FlyoutCheckDescStyle" TargetType="TextBlock">
+            <Setter Property="FontSize"   Value="10"/>
+            <Setter Property="Foreground" Value="#7090AE"/>
+            <Setter Property="Margin"     Value="0,2,0,0"/>
+        </Style>
+
     </mah:MetroWindow.Resources>
 
     <Border CornerRadius="10" BorderThickness="2" Margin="8" SnapsToDevicePixels="True">
@@ -141,11 +218,14 @@
             <!-- ═══════════════════════════════════════════════════════
                  ROW 1  —  Flyout toggle buttons
                  ═══════════════════════════════════════════════════════ -->
+            <!-- ═══════════════════════════════════════════════════════
+                 ROW 1  —  Flyout toggle buttons
+                 ═══════════════════════════════════════════════════════ -->
             <Border DockPanel.Dock="Top"
                     Background="#D0E4F4" BorderBrush="#AECADF" BorderThickness="0,0,0,1"
                     Padding="8,6">
                 <Grid>
-                    <!-- ── Toggle button row ── -->
+                    <!-- Toggle buttons -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <ToggleButton x:Name="btnOptionsFlyout"     Content="⚙ Options"      Style="{StaticResource FlyoutToggleStyle}"/>
                         <ToggleButton x:Name="btnCompareModeFlyout" Content="⚖ Compare Mode" Style="{StaticResource FlyoutToggleStyle}"/>
@@ -154,160 +234,140 @@
                         <ToggleButton x:Name="btnExcelFlyout"       Content="▦ Excel"        Style="{StaticResource FlyoutToggleStyle}"/>
                     </StackPanel>
 
-                    <!-- ══════════════════════════════════════════════
-                         OPTIONS popup
-                         ══════════════════════════════════════════════ -->
+                    <!-- ══════════════ OPTIONS ══════════════ -->
                     <Popup Placement="Bottom"
                            PlacementTarget="{Binding ElementName=btnOptionsFlyout}"
                            IsOpen="{Binding IsChecked, ElementName=btnOptionsFlyout, Mode=TwoWay}"
                            StaysOpen="False" AllowsTransparency="True">
-                        <Border Background="White" BorderBrush="#C2D8EE" BorderThickness="1"
-                                CornerRadius="8" Padding="16,14" MinWidth="420">
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.14" Color="#1A3A5C"/>
-                            </Border.Effect>
+                        <Border Style="{StaticResource FlyoutBorderStyle}" MinWidth="440">
                             <StackPanel>
-                                <DockPanel Margin="0,0,0,10">
-                                    <TextBlock Text="⚙" FontSize="14" Foreground="#1E5C9B"
-                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Options" FontSize="13" FontWeight="SemiBold"
-                                               Foreground="#1A3A5C" VerticalAlignment="Center"/>
+                                <!-- Header -->
+                                <DockPanel Style="{StaticResource FlyoutHeaderPanelStyle}">
+                                    <Border DockPanel.Dock="Left" Style="{StaticResource FlyoutIconBorderStyle}" Background="#E8F0FB">
+                                        <TextBlock Text="⚙" Style="{StaticResource FlyoutIconTextStyle}" Foreground="#1E5C9B"/>
+                                    </Border>
+                                    <TextBlock Text="Options" Style="{StaticResource FlyoutTitleStyle}"/>
                                 </DockPanel>
-                                <Border Height="1" Background="#E4EEF8" Margin="0,0,0,12"/>
 
-                                <!-- Checkboxes -->
-                                <CheckBox Content="Enable logging"
-                                          IsChecked="{Binding EnableLogging}"
-                                          Margin="0,0,0,8" Cursor="Hand" FontSize="11"/>
-                                <CheckBox Content="Keep window topmost"
-                                          IsChecked="{Binding Topmost}"
-                                          Margin="0,0,0,12" Cursor="Hand" FontSize="11"/>
+                                <!-- General section -->
+                                <TextBlock Text="GENERAL" Style="{StaticResource FlyoutSectionLabelStyle}"/>
+                                <Border Style="{StaticResource FlyoutCardStyle}">
+                                    <StackPanel>
+                                        <CheckBox IsChecked="{Binding EnableLogging}" Cursor="Hand" Style="{StaticResource FlyoutCheckStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Enable logging" Style="{StaticResource FlyoutCheckTitleStyle}"/>
+                                                <TextBlock Text="Write comparison events to a log file" Style="{StaticResource FlyoutCheckDescStyle}"/>
+                                            </StackPanel>
+                                        </CheckBox>
+                                        <!-- Log path row — only when logging on -->
+                                        <Grid Margin="24,8,0,0"
+                                              Visibility="{Binding LogPathVisibility, Converter={StaticResource StrToVis}}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="70"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="44"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Log path:" VerticalAlignment="Center" FontSize="11" Foreground="#5A7A9A"/>
+                                            <TextBox Grid.Column="1" x:Name="txtLogPath" Margin="0,0,6,0"
+                                                     Style="{StaticResource PathInputStyle}"
+                                                     Text="{Binding LogPath, UpdateSourceTrigger=PropertyChanged}"
+                                                     AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"/>
+                                            <Button Grid.Column="2" Content="..." Command="{Binding BrowseLogCommand}"
+                                                    Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                        </Grid>
+                                        <CheckBox IsChecked="{Binding Topmost}" Cursor="Hand" Margin="0,10,0,0" Style="{StaticResource FlyoutCheckStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Keep window topmost" Style="{StaticResource FlyoutCheckTitleStyle}"/>
+                                                <TextBlock Text="Always on top when not maximised" Style="{StaticResource FlyoutCheckDescStyle}"/>
+                                            </StackPanel>
+                                        </CheckBox>
+                                    </StackPanel>
+                                </Border>
 
-                                <!-- Log path (shown only when logging enabled) -->
-                                <Grid Margin="0,0,0,10"
-                                      Visibility="{Binding LogPathVisibility, Converter={StaticResource StrToVis}}">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="80"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="44"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Log path:"
-                                               VerticalAlignment="Center" FontSize="11" Foreground="#3A5A78"/>
-                                    <TextBox Grid.Column="1" x:Name="txtLogPath" Margin="0,0,6,0"
-                                             Style="{StaticResource PathInputStyle}"
-                                             Text="{Binding LogPath, UpdateSourceTrigger=PropertyChanged}"
-                                             AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"/>
-                                    <Button Grid.Column="2" Content="..."
-                                            Command="{Binding BrowseLogCommand}"
-                                            Style="{StaticResource SecondaryActionButtonStyle}"/>
-                                </Grid>
-
-                                <Border Height="1" Background="#E4EEF8" Margin="0,0,0,10"/>
-                                <TextBlock Text="Beyond Compare" FontSize="11" FontWeight="SemiBold"
-                                           Foreground="#3A5A78" Margin="0,0,0,8"/>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="40"/>
-                                        <ColumnDefinition Width="52"/>
-                                        <ColumnDefinition Width="52"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox Grid.Column="0" x:Name="txtBcPath" Margin="0,0,6,0"
-                                             Style="{StaticResource PathInputStyle}"
-                                             Text="{Binding BcPath, UpdateSourceTrigger=PropertyChanged}"
-                                             AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"
-                                             ToolTip="Path to BCompare.exe — leave blank to auto-detect"/>
-                                    <Button Grid.Column="1" Content="..." Margin="0,0,4,0"
-                                            Command="{Binding BrowseBcPathCommand}"
-                                            Style="{StaticResource SecondaryActionButtonStyle}"/>
-                                    <Button Grid.Column="2" Content="Save" Margin="0,0,4,0"
-                                            Command="{Binding SaveBcPathCommand}"
-                                            Style="{StaticResource SecondaryActionButtonStyle}"/>
-                                    <Button Grid.Column="3" Content="Clear"
-                                            Command="{Binding ClearBcPathCommand}"
-                                            Style="{StaticResource SecondaryActionButtonStyle}"/>
-                                </Grid>
-                                <TextBlock Margin="0,5,0,0" FontSize="10"
-                                           Text="{Binding BcStatusText}"
-                                           Foreground="{Binding BcStatusForeground, Converter={StaticResource StrToBrush}}"/>
+                                <!-- Beyond Compare section -->
+                                <TextBlock Text="BEYOND COMPARE" Style="{StaticResource FlyoutSectionLabelStyle}"/>
+                                <Border Style="{StaticResource FlyoutCardStyle}">
+                                    <StackPanel>
+                                        <TextBlock Text="Path to BCompare.exe" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="#2C4A6A" Margin="0,0,0,6"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="40"/>
+                                                <ColumnDefinition Width="52"/>
+                                                <ColumnDefinition Width="52"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0" x:Name="txtBcPath" Margin="0,0,6,0"
+                                                     Style="{StaticResource PathInputStyle}"
+                                                     Text="{Binding BcPath, UpdateSourceTrigger=PropertyChanged}"
+                                                     AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"
+                                                     ToolTip="Path to BCompare.exe — leave blank to auto-detect"/>
+                                            <Button Grid.Column="1" Content="..." Margin="0,0,4,0" Command="{Binding BrowseBcPathCommand}" Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                            <Button Grid.Column="2" Content="Save"  Margin="0,0,4,0" Command="{Binding SaveBcPathCommand}"   Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                            <Button Grid.Column="3" Content="Clear"                   Command="{Binding ClearBcPathCommand}"  Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                        </Grid>
+                                        <TextBlock Margin="0,6,0,0" FontSize="10"
+                                                   Text="{Binding BcStatusText}"
+                                                   Foreground="{Binding BcStatusForeground, Converter={StaticResource StrToBrush}}"/>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </Border>
                     </Popup>
 
-                    <!-- ══════════════════════════════════════════════
-                         COMPARE MODE popup
-                         ══════════════════════════════════════════════ -->
+                    <!-- ══════════════ COMPARE MODE ══════════════ -->
                     <Popup Placement="Bottom"
                            PlacementTarget="{Binding ElementName=btnCompareModeFlyout}"
                            IsOpen="{Binding IsChecked, ElementName=btnCompareModeFlyout, Mode=TwoWay}"
                            StaysOpen="False" AllowsTransparency="True">
-                        <Border Background="White" BorderBrush="#C2D8EE" BorderThickness="1"
-                                CornerRadius="8" Padding="16,14" MinWidth="310">
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.14" Color="#1A3A5C"/>
-                            </Border.Effect>
+                        <Border Style="{StaticResource FlyoutBorderStyle}" MinWidth="320">
                             <StackPanel>
-                                <DockPanel Margin="0,0,0,10">
-                                    <TextBlock Text="⚖" FontSize="14" Foreground="#1E5C9B"
-                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Compare Mode" FontSize="13" FontWeight="SemiBold"
-                                               Foreground="#1A3A5C" VerticalAlignment="Center"/>
+                                <!-- Header -->
+                                <DockPanel Style="{StaticResource FlyoutHeaderPanelStyle}">
+                                    <Border DockPanel.Dock="Left" Style="{StaticResource FlyoutIconBorderStyle}" Background="#E8F0FB">
+                                        <TextBlock Text="⚖" Style="{StaticResource FlyoutIconTextStyle}" Foreground="#1E5C9B"/>
+                                    </Border>
+                                    <TextBlock Text="Compare Mode" Style="{StaticResource FlyoutTitleStyle}"/>
                                 </DockPanel>
-                                <Border Height="1" Background="#E4EEF8" Margin="0,0,0,12"/>
 
-                                <!-- Smart XML -->
-                                <Border Background="#F3F8FE" CornerRadius="6" Padding="10,9" Margin="0,0,0,8">
-                                    <CheckBox IsChecked="{Binding SmartXml}" Cursor="Hand">
-                                        <CheckBox.Content>
-                                            <StackPanel Margin="4,0,0,0">
-                                                <TextBlock Text="Smart XML Compare"
-                                                           FontWeight="SemiBold" FontSize="11" Foreground="#1A3A5C"/>
-                                                <TextBlock Text="Normalises .xml / .aml / .svg before diff"
-                                                           FontSize="10" Foreground="#6B8AAA" Margin="0,2,0,0"/>
-                                            </StackPanel>
-                                        </CheckBox.Content>
-                                    </CheckBox>
-                                </Border>
-
-                                <!-- Force Re-read -->
-                                <Border Background="#F3F8FE" CornerRadius="6" Padding="10,9" Margin="0,0,0,8">
-                                    <CheckBox IsChecked="{Binding ForceReread}" Cursor="Hand">
-                                        <CheckBox.Content>
-                                            <StackPanel Margin="4,0,0,0">
-                                                <TextBlock Text="Force Re-read"
-                                                           FontWeight="SemiBold" FontSize="11" Foreground="#1A3A5C"/>
-                                                <TextBlock Text="Bypass hash cache — re-read all files from disk"
-                                                           FontSize="10" Foreground="#6B8AAA" Margin="0,2,0,0"/>
-                                            </StackPanel>
-                                        </CheckBox.Content>
-                                    </CheckBox>
-                                </Border>
-
-                                <!-- Hash Strategy -->
-                                <Border Background="#F3F8FE" CornerRadius="6" Padding="10,9">
+                                <!-- Options section -->
+                                <TextBlock Text="OPTIONS" Style="{StaticResource FlyoutSectionLabelStyle}"/>
+                                <Border Style="{StaticResource FlyoutCardStyle}">
                                     <StackPanel>
-                                        <TextBlock Text="Hash Strategy" FontWeight="SemiBold"
-                                                   FontSize="11" Foreground="#1A3A5C" Margin="0,0,0,8"/>
-                                        <RadioButton x:Name="rdNormal"
-                                                     GroupName="CompareMode" FontSize="11" Cursor="Hand"
-                                                     Margin="0,0,0,5" 
-						     Checked="CompareMode_Normal_Checked">
-                                            <RadioButton.Content>
-                                                <StackPanel Margin="4,0,0,0">
-                                                    <TextBlock Text="Normal" FontWeight="SemiBold" FontSize="11" Foreground="#1A3A5C"/>
-                                                    <TextBlock Text="Size mismatch → skip hash  (faster)" FontSize="10" Foreground="#6B8AAA" Margin="0,1,0,0"/>
-                                                </StackPanel>
-                                            </RadioButton.Content>
+                                        <CheckBox IsChecked="{Binding SmartXml}" Cursor="Hand" Style="{StaticResource FlyoutCheckStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Smart XML compare" Style="{StaticResource FlyoutCheckTitleStyle}"/>
+                                                <TextBlock Text="Normalise .xml / .aml / .svg before diff" Style="{StaticResource FlyoutCheckDescStyle}"/>
+                                            </StackPanel>
+                                        </CheckBox>
+                                        <CheckBox IsChecked="{Binding ForceReread}" Cursor="Hand" Margin="0,10,0,0" Style="{StaticResource FlyoutCheckStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Force re-read" Style="{StaticResource FlyoutCheckTitleStyle}"/>
+                                                <TextBlock Text="Bypass hash cache — re-read all files from disk" Style="{StaticResource FlyoutCheckDescStyle}"/>
+                                            </StackPanel>
+                                        </CheckBox>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Hash strategy section -->
+                                <TextBlock Text="HASH STRATEGY" Style="{StaticResource FlyoutSectionLabelStyle}"/>
+                                <Border Style="{StaticResource FlyoutCardStyle}">
+                                    <StackPanel>
+                                        <RadioButton x:Name="rdNormal" GroupName="CompareMode" Cursor="Hand"
+                                                    
+                                                     Checked="CompareMode_Normal_Checked">
+                                            <StackPanel>
+                                                <TextBlock Text="Normal" Style="{StaticResource FlyoutCheckTitleStyle}"/>
+                                                <TextBlock Text="Size mismatch → skip hash  (faster)" Style="{StaticResource FlyoutCheckDescStyle}"/>
+                                            </StackPanel>
                                         </RadioButton>
-                                        <RadioButton x:Name="rdHashOnly"
-                                                     GroupName="CompareMode" FontSize="11" Cursor="Hand"
+                                        <RadioButton x:Name="rdHashOnly" GroupName="CompareMode" Cursor="Hand"
+                                                     Margin="0,10,0,0" 
                                                      Checked="CompareMode_HashOnly_Checked">
-                                            <RadioButton.Content>
-                                                <StackPanel Margin="4,0,0,0">
-                                                    <TextBlock Text="Hash Only" FontWeight="SemiBold" FontSize="11" Foreground="#1A3A5C"/>
-                                                    <TextBlock Text="Always hash regardless of size  (thorough)" FontSize="10" Foreground="#6B8AAA" Margin="0,1,0,0"/>
-                                                </StackPanel>
-                                            </RadioButton.Content>
+                                            <StackPanel>
+                                                <TextBlock Text="Hash only" Style="{StaticResource FlyoutCheckTitleStyle}"/>
+                                                <TextBlock Text="Always hash regardless of size  (thorough)" Style="{StaticResource FlyoutCheckDescStyle}"/>
+                                            </StackPanel>
                                         </RadioButton>
                                     </StackPanel>
                                 </Border>
@@ -315,220 +375,233 @@
                         </Border>
                     </Popup>
 
-                    <!-- ══════════════════════════════════════════════
-                         COPY popup
-                         ══════════════════════════════════════════════ -->
+                    <!-- ══════════════ COPY ══════════════ -->
                     <Popup Placement="Bottom"
                            PlacementTarget="{Binding ElementName=btnCopyFlyout}"
                            IsOpen="{Binding IsChecked, ElementName=btnCopyFlyout, Mode=TwoWay}"
                            StaysOpen="False" AllowsTransparency="True"
                            Opened="CopyFlyout_Opened">
-                        <Border Background="White" BorderBrush="#C2D8EE" BorderThickness="1"
-                                CornerRadius="8" Padding="16,14" MinWidth="380">
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.14" Color="#1A3A5C"/>
-                            </Border.Effect>
+                        <Border Style="{StaticResource FlyoutBorderStyle}" MinWidth="420">
                             <StackPanel>
-                                <!-- ModeTag is set to "3" (Copy) by the Popup Opened event in code-behind -->
-                                <DockPanel Margin="0,0,0,10">
-                                    <TextBlock Text="⧉" FontSize="14" Foreground="#1E5C9B"
-                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Copy Files" FontSize="13" FontWeight="SemiBold"
-                                               Foreground="#1A3A5C" VerticalAlignment="Center"/>
+                                <!-- Header -->
+                                <DockPanel Style="{StaticResource FlyoutHeaderPanelStyle}">
+                                    <Border DockPanel.Dock="Left" Style="{StaticResource FlyoutIconBorderStyle}" Background="#E8F5E9">
+                                        <TextBlock Text="⧉" Style="{StaticResource FlyoutIconTextStyle}" Foreground="#2E7D32"/>
+                                    </Border>
+                                    <TextBlock Text="Copy Files" Style="{StaticResource FlyoutTitleStyle}"/>
                                 </DockPanel>
-                                <Border Height="1" Background="#E4EEF8" Margin="0,0,0,12"/>
 
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="80"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Target set:"
-                                               VerticalAlignment="Center" FontSize="11" Foreground="#3A5A78"/>
-                                    <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{Binding TargetTag}">
-                                        <ComboBoxItem Tag="2">Left-Orphans</ComboBoxItem>
-                                        <ComboBoxItem Tag="3">Right-Orphans</ComboBoxItem>
-                                        <ComboBoxItem Tag="4L">Different — Left folder only</ComboBoxItem>
-                                        <ComboBoxItem Tag="4R">Different — Right folder only</ComboBoxItem>
-                                        <ComboBoxItem Tag="5">All sets</ComboBoxItem>
-                                        <ComboBoxItem Tag="1">Same</ComboBoxItem>
-                                        <ComboBoxItem Tag="CL">Copy entire Left folder</ComboBoxItem>
-                                        <ComboBoxItem Tag="CR">Copy entire Right folder</ComboBoxItem>
-                                    </ComboBox>
-                                </Grid>
-
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="80"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="44"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Destination:"
-                                               VerticalAlignment="Center" FontSize="11" Foreground="#3A5A78"/>
-                                    <TextBox Grid.Column="1" x:Name="txtExportPath" Margin="0,0,6,0"
-                                             Style="{StaticResource PathInputStyle}"
-                                             Text="{Binding ExportPath, UpdateSourceTrigger=PropertyChanged}"
-                                             AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"/>
-                                    <Button Grid.Column="2" Content="..."
-                                            Command="{Binding BrowseExportCommand}"
-                                            Style="{StaticResource SecondaryActionButtonStyle}"/>
-                                </Grid>
-
-                                <DockPanel LastChildFill="False">
-                                    <CheckBox DockPanel.Dock="Left" Content="Category subfolders"
-                                              IsChecked="{Binding CategorySubfolders}"
-                                              VerticalAlignment="Center" FontSize="11" Cursor="Hand"/>
-                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                        <Button Content="▶ Start" Width="90" Margin="0,0,8,0"
-                                                Command="{Binding StartCommand}"
-                                                Style="{StaticResource PrimaryActionButtonStyle}"/>
-                                        <Button Content="✕ Cancel" Width="80"
-                                                Command="{Binding CancelCommand}"
-                                                Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                <!-- Settings section -->
+                                <TextBlock Text="SETTINGS" Style="{StaticResource FlyoutSectionLabelStyle}"/>
+                                <Border Style="{StaticResource FlyoutCardStyle}">
+                                    <StackPanel>
+                                        <!-- Target set row -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="86"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Target set:" VerticalAlignment="Center"
+                                                       FontSize="11" FontWeight="SemiBold" Foreground="#2C4A6A"/>
+                                            <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{Binding TargetTag}">
+                                                <ComboBoxItem Tag="2">Left-Orphans</ComboBoxItem>
+                                                <ComboBoxItem Tag="3">Right-Orphans</ComboBoxItem>
+                                                <ComboBoxItem Tag="4L">Different — Left folder only</ComboBoxItem>
+                                                <ComboBoxItem Tag="4R">Different — Right folder only</ComboBoxItem>
+                                                <ComboBoxItem Tag="5">All sets</ComboBoxItem>
+                                                <ComboBoxItem Tag="1">Same</ComboBoxItem>
+                                                <ComboBoxItem Tag="CL">Copy entire Left folder</ComboBoxItem>
+                                                <ComboBoxItem Tag="CR">Copy entire Right folder</ComboBoxItem>
+                                            </ComboBox>
+                                        </Grid>
+                                        <!-- Destination row -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="86"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="44"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Destination:" VerticalAlignment="Center"
+                                                       FontSize="11" FontWeight="SemiBold" Foreground="#2C4A6A"/>
+                                            <TextBox Grid.Column="1" x:Name="txtExportPath" Margin="0,0,6,0"
+                                                     Style="{StaticResource PathInputStyle}"
+                                                     Text="{Binding ExportPath, UpdateSourceTrigger=PropertyChanged}"
+                                                     AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"/>
+                                            <Button Grid.Column="2" Content="..." Command="{Binding BrowseExportCommand}"
+                                                    Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                        </Grid>
+                                        <!-- Subfolder toggle -->
+                                        <CheckBox IsChecked="{Binding CategorySubfolders}" Cursor="Hand"
+                                                  Style="{StaticResource FlyoutCheckStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Create category subfolders" Style="{StaticResource FlyoutCheckTitleStyle}"/>
+                                                <TextBlock Text="Organise output into Same / Diff / LeftOnly sub-folders" Style="{StaticResource FlyoutCheckDescStyle}"/>
+                                            </StackPanel>
+                                        </CheckBox>
                                     </StackPanel>
-                                </DockPanel>
+                                </Border>
+
+                                <!-- Action row -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                                    <Button Content="▶  Start" Width="100" Margin="0,0,8,0"
+                                            Command="{Binding StartCommand}"
+                                            Style="{StaticResource PrimaryActionButtonStyle}"/>
+                                    <Button Content="✕  Cancel" Width="88"
+                                            Command="{Binding CancelCommand}"
+                                            Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </Popup>
 
-                    <!-- ══════════════════════════════════════════════
-                         DELETE popup
-                         ══════════════════════════════════════════════ -->
+                    <!-- ══════════════ DELETE ══════════════ -->
                     <Popup Placement="Bottom"
                            PlacementTarget="{Binding ElementName=btnDeleteFlyout}"
                            IsOpen="{Binding IsChecked, ElementName=btnDeleteFlyout, Mode=TwoWay}"
                            StaysOpen="False" AllowsTransparency="True"
                            Opened="DeleteFlyout_Opened">
-                        <Border Background="White" BorderBrush="#C2D8EE" BorderThickness="1"
-                                CornerRadius="8" Padding="16,14" MinWidth="380">
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.14" Color="#1A3A5C"/>
-                            </Border.Effect>
+                        <Border Style="{StaticResource FlyoutBorderStyle}" MinWidth="420">
                             <StackPanel>
-                                <!-- ModeTag is set to "2" (Delete) by the Popup Opened event in code-behind -->
-                                <DockPanel Margin="0,0,0,10">
-                                    <TextBlock Text="⊟" FontSize="14" Foreground="#B03A2E"
-                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Delete Files" FontSize="13" FontWeight="SemiBold"
-                                               Foreground="#1A3A5C" VerticalAlignment="Center"/>
-                                </DockPanel>
-                                <Border Height="1" Background="#E4EEF8" Margin="0,0,0,12"/>
-
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="80"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Target set:"
-                                               VerticalAlignment="Center" FontSize="11" Foreground="#3A5A78"/>
-                                    <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{Binding TargetTag}">
-                                        <ComboBoxItem Tag="2">Left-Orphans</ComboBoxItem>
-                                        <ComboBoxItem Tag="3">Right-Orphans</ComboBoxItem>
-                                        <ComboBoxItem Tag="4">Different (both sides)</ComboBoxItem>
-                                        <ComboBoxItem Tag="4L">Different — Left folder only</ComboBoxItem>
-                                        <ComboBoxItem Tag="4R">Different — Right folder only</ComboBoxItem>
-                                        <ComboBoxItem Tag="5">All sets</ComboBoxItem>
-                                        <ComboBoxItem Tag="1">Same (both sides)</ComboBoxItem>
-                                        <ComboBoxItem Tag="1L">Same — Left folder only</ComboBoxItem>
-                                        <ComboBoxItem Tag="1R">Same — Right folder only</ComboBoxItem>
-                                    </ComboBox>
-                                </Grid>
-
-                                <DockPanel LastChildFill="False">
-                                    <CheckBox DockPanel.Dock="Left" Content="Keep root folder if empty"
-                                              IsChecked="{Binding KeepRoot}"
-                                              Visibility="{Binding KeepRootVisibility, Converter={StaticResource StrToVis}}"
-                                              VerticalAlignment="Center" FontSize="11" Cursor="Hand"/>
-                                    <StackPanel DockPanel.Dock="Right" 
-				    Orientation="Horizontal">
-                                        <Button Content="▶ Start" Width="90" Margin="0,0,8,0"
-                                                Command="{Binding StartCommand}"
-                                                Style="{StaticResource PrimaryActionButtonStyle}"/>
-                                        <Button Content="✕ Cancel" Width="80"
-                                                Command="{Binding CancelCommand}"
-                                                Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                <!-- Header — red tint to signal destructive action -->
+                                <DockPanel Style="{StaticResource FlyoutHeaderPanelStyle}">
+                                    <Border DockPanel.Dock="Left" Style="{StaticResource FlyoutIconBorderStyle}" Background="#FDECEA">
+                                        <TextBlock Text="⊟" Style="{StaticResource FlyoutIconTextStyle}" Foreground="#C0392B"/>
+                                    </Border>
+                                    <StackPanel>
+                                        <TextBlock Text="Delete Files" Style="{StaticResource FlyoutTitleStyle}"/>
+                                        <TextBlock Text="Files are sent to the Recycle Bin unless you choose permanent."
+                                                   FontSize="10" Foreground="#A04040" Margin="0,2,0,0"/>
                                     </StackPanel>
                                 </DockPanel>
+
+                                <!-- Settings section -->
+                                <TextBlock Text="SETTINGS" Style="{StaticResource FlyoutSectionLabelStyle}"/>
+                                <Border Style="{StaticResource FlyoutCardStyle}">
+                                    <StackPanel>
+                                        <!-- Target set row -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="86"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Target set:" VerticalAlignment="Center"
+                                                       FontSize="11" FontWeight="SemiBold" Foreground="#2C4A6A"/>
+                                            <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{Binding TargetTag}">
+                                                <ComboBoxItem Tag="2">Left-Orphans</ComboBoxItem>
+                                                <ComboBoxItem Tag="3">Right-Orphans</ComboBoxItem>
+                                                <ComboBoxItem Tag="4">Different (both sides)</ComboBoxItem>
+                                                <ComboBoxItem Tag="4L">Different — Left folder only</ComboBoxItem>
+                                                <ComboBoxItem Tag="4R">Different — Right folder only</ComboBoxItem>
+                                                <ComboBoxItem Tag="5">All sets</ComboBoxItem>
+                                                <ComboBoxItem Tag="1">Same (both sides)</ComboBoxItem>
+                                                <ComboBoxItem Tag="1L">Same — Left folder only</ComboBoxItem>
+                                                <ComboBoxItem Tag="1R">Same — Right folder only</ComboBoxItem>
+                                            </ComboBox>
+                                        </Grid>
+                                        <!-- Keep root toggle -->
+                                        <CheckBox IsChecked="{Binding KeepRoot}" Cursor="Hand"
+                                                  Visibility="{Binding KeepRootVisibility, Converter={StaticResource StrToVis}}"
+                                                  Style="{StaticResource FlyoutCheckStyle}">
+                                            <StackPanel>
+                                                <TextBlock Text="Keep root folder if empty" Style="{StaticResource FlyoutCheckTitleStyle}"/>
+                                                <TextBlock Text="Don't delete the root folder even when all its files are removed" Style="{StaticResource FlyoutCheckDescStyle}"/>
+                                            </StackPanel>
+                                        </CheckBox>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Action row -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                                    <Button Content="▶  Start" Width="100" Margin="0,0,8,0"
+                                            Command="{Binding StartCommand}"
+                                            Style="{StaticResource PrimaryActionButtonStyle}"/>
+                                    <Button Content="✕  Cancel" Width="88"
+                                            Command="{Binding CancelCommand}"
+                                            Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </Popup>
 
-                    <!-- ══════════════════════════════════════════════
-                         EXCEL popup
-                         ══════════════════════════════════════════════ -->
+                    <!-- ══════════════ EXCEL ══════════════ -->
                     <Popup Placement="Bottom"
                            PlacementTarget="{Binding ElementName=btnExcelFlyout}"
                            IsOpen="{Binding IsChecked, ElementName=btnExcelFlyout, Mode=TwoWay}"
                            StaysOpen="False" AllowsTransparency="True">
-                        <Border Background="White" BorderBrush="#C2D8EE" BorderThickness="1"
-                                CornerRadius="8" Padding="16,14" MinWidth="380">
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.14" Color="#1A3A5C"/>
-                            </Border.Effect>
+                        <Border Style="{StaticResource FlyoutBorderStyle}" MinWidth="420">
                             <StackPanel>
-                                <DockPanel Margin="0,0,0,10">
-                                    <TextBlock Text="▦" FontSize="14" Foreground="#1E5C9B"
-                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Export to Excel" FontSize="13" FontWeight="SemiBold"
-                                               Foreground="#1A3A5C" VerticalAlignment="Center"/>
+                                <!-- Header -->
+                                <DockPanel Style="{StaticResource FlyoutHeaderPanelStyle}">
+                                    <Border DockPanel.Dock="Left" Style="{StaticResource FlyoutIconBorderStyle}" Background="#FFF8E1">
+                                        <TextBlock Text="▦" Style="{StaticResource FlyoutIconTextStyle}" Foreground="#E65100"/>
+                                    </Border>
+                                    <TextBlock Text="Export to Excel" Style="{StaticResource FlyoutTitleStyle}"/>
                                 </DockPanel>
-                                <Border Height="1" Background="#E4EEF8" Margin="0,0,0,12"/>
 
-                                <!-- Save-to path -->
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="80"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="44"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Save to:"
-                                               VerticalAlignment="Center" FontSize="11" Foreground="#3A5A78"/>
-                                    <TextBox Grid.Column="1" x:Name="txtExcelPath" Margin="0,0,6,0"
-                                             Style="{StaticResource PathInputStyle}"
-                                             Text="{Binding ExcelPath, UpdateSourceTrigger=PropertyChanged}"
-                                             AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"/>
-                                    <Button Grid.Column="2" Content="..."
-                                            Command="{Binding BrowseExcelCommand}"
-                                            Style="{StaticResource SecondaryActionButtonStyle}"/>
-                                </Grid>
+                                <!-- Settings section -->
+                                <TextBlock Text="SETTINGS" Style="{StaticResource FlyoutSectionLabelStyle}"/>
+                                <Border Style="{StaticResource FlyoutCardStyle}">
+                                    <StackPanel>
+                                        <!-- Save-to path -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="86"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="44"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Save to:" VerticalAlignment="Center"
+                                                       FontSize="11" FontWeight="SemiBold" Foreground="#2C4A6A"/>
+                                            <TextBox Grid.Column="1" x:Name="txtExcelPath" Margin="0,0,6,0"
+                                                     Style="{StaticResource PathInputStyle}"
+                                                     Text="{Binding ExcelPath, UpdateSourceTrigger=PropertyChanged}"
+                                                     AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"/>
+                                            <Button Grid.Column="2" Content="..." Command="{Binding BrowseExcelCommand}"
+                                                    Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                        </Grid>
+                                        <!-- Sheet name -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="86"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Sheet name:" VerticalAlignment="Center"
+                                                       FontSize="11" FontWeight="SemiBold" Foreground="#2C4A6A"/>
+                                            <TextBox Grid.Column="1" Style="{StaticResource PathInputStyle}"
+                                                     MaxLength="31"
+                                                     Text="{Binding SheetName, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </Grid>
+                                        <!-- Category -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="86"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Category:" VerticalAlignment="Center"
+                                                       FontSize="11" FontWeight="SemiBold" Foreground="#2C4A6A"/>
+                                            <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{Binding ExcelCategoryTag}">
+                                                <ComboBoxItem Tag="1">Same</ComboBoxItem>
+                                                <ComboBoxItem Tag="2">Left-Orphans</ComboBoxItem>
+                                                <ComboBoxItem Tag="3">Right-Orphans</ComboBoxItem>
+                                                <ComboBoxItem Tag="4">Different</ComboBoxItem>
+                                                <ComboBoxItem Tag="5">All</ComboBoxItem>
+                                            </ComboBox>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
 
-                                <!-- Sheet name -->
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="80"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Sheet name:"
-                                               VerticalAlignment="Center" FontSize="11"
-					        Foreground="#3A5A78"/>
-                                    <TextBox Grid.Column="1"
-				     Style="{StaticResource PathInputStyle}"
-                                             MaxLength="31"
-                                             Text="{Binding SheetName, UpdateSourceTrigger=PropertyChanged}"/>
-                                </Grid>
-
-                                <!-- Category + Export button -->
-                                <DockPanel LastChildFill="False">
-                                    <TextBlock DockPanel.Dock="Left" Text="Category:"
-                                               VerticalAlignment="Center" FontSize="11"
-                                               Foreground="#3A5A78" Margin="0,0,8,0"/>
-                                    <ComboBox DockPanel.Dock="Left" Width="160"
-                                              SelectedValuePath="Tag" SelectedValue="{Binding ExcelCategoryTag}">
-                                        <ComboBoxItem Tag="1">Same</ComboBoxItem>
-                                        <ComboBoxItem Tag="2">Left-Orphans</ComboBoxItem>
-                                        <ComboBoxItem Tag="3">Right-Orphans</ComboBoxItem>
-                                        <ComboBoxItem Tag="4">Different</ComboBoxItem>
-                                        <ComboBoxItem Tag="5">All</ComboBoxItem>
-                                    </ComboBox>
-                                    <Button DockPanel.Dock="Right" Content="▦ Export" Width="90"
+                                <!-- Action row -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                                    <Button Content="▦  Export" Width="100"
                                             Command="{Binding ExportExcelCommand}"
                                             Style="{StaticResource PrimaryActionButtonStyle}"/>
-                                </DockPanel>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </Popup>
+
                 </Grid>
             </Border>
+
 
             <!-- ═══════════════════════════════════════════════════════
                  ROW 2  —  Action buttons (left)  +  Search / Filter (right)
