@@ -140,6 +140,8 @@ namespace FolderComparerUI.ViewModels
         public string SortLeftHeader     { get => _sortLeftHeader;     set { SetField(ref _sortLeftHeader, value);     } }
         public string SortCategoryHeader { get => _sortCategoryHeader; set { SetField(ref _sortCategoryHeader, value); } }
         public string SortRightHeader    { get => _sortRightHeader;    set { SetField(ref _sortRightHeader, value);    } }
+        /// <summary>"Visible" when a sort is active, "Collapsed" otherwise — drives the Clear Sort button.</summary>
+        public string SortIsActive => _lastSortProp != null ? "Visible" : "Collapsed";
         public string CopyGroupVisibility    { get => _copyGroupVisibility;    set { SetField(ref _copyGroupVisibility, value);    } }
         public string KeepRootVisibility     { get => _keepRootVisibility;     set { SetField(ref _keepRootVisibility, value);     } }
         public string LogPathVisibility      { get => _logPathVisibility;      set { SetField(ref _logPathVisibility, value);      } }
@@ -200,6 +202,7 @@ namespace FolderComparerUI.ViewModels
         public RelayCommand      SortCategoryCommand { get; }
         public RelayCommand      SortRightCommand    { get; }
         public RelayCommand      ClearFilterCommand  { get; }  // #8
+        public RelayCommand      ClearSortCommand    { get; }  // clear active sort
         // Context menu commands — navigate / BC
         public RelayCommand OpenLeftExplorerCommand   { get; }
         public RelayCommand OpenRightExplorerCommand  { get; }
@@ -270,6 +273,7 @@ namespace FolderComparerUI.ViewModels
                 ShowLeftOrphan = true;
                 ShowRightOrphan = true;
             });  // #8
+            ClearSortCommand         = new RelayCommand(DoClearSort, () => _lastSortProp != null);
             OpenLeftExplorerCommand  = new RelayCommand(() => { if (SelectedRow?.LeftFull  is string p && !string.IsNullOrEmpty(p)) RevealInExplorer(p); });
             OpenRightExplorerCommand = new RelayCommand(() => { if (SelectedRow?.RightFull is string p && !string.IsNullOrEmpty(p)) RevealInExplorer(p); });
             OpenLeftBcCommand        = new RelayCommand(() => LaunchBc(SelectedRow?.LeftFull));
@@ -621,6 +625,19 @@ namespace FolderComparerUI.ViewModels
                 };
                 ReplaceRow(row, updated);
 
+                // Keep _lastCompareResult in sync so subsequent bulk Delete/Copy
+                // operate on the current state, not the stale original scan result.
+                SyncCompareResultFromAllResults();
+
+                // Update the persistent count in the status bar
+                int total = _allResults.Count;
+                int same = _allResults.Count(r => r.Category == "Same");
+                int lonly = _allResults.Count(r => r.Category == "Left-Orphan");
+                int ronly = _allResults.Count(r => r.Category == "Right-Orphan");
+                int diff = _allResults.Count(r => r.Category == "Different");
+                ResultCountText =
+                    $"{total:N0} files  ·  Same: {same:N0}  " +
+                    $"Left-only: {lonly:N0}  Right-only: {ronly:N0}  Different: {diff:N0}";
                 StatusText = $"Copied to {(toRight ? "right" : "left")}: {row.Relative}";
             }
             catch (Exception ex)
@@ -703,7 +720,21 @@ namespace FolderComparerUI.ViewModels
                         RightFull = right ? "" : row.RightFull
                     };
                     ReplaceRow(row, updated);
+
+                    // Update the persistent count in the status bar
+                    int total = _allResults.Count;
+                    int same = _allResults.Count(r => r.Category == "Same");
+                    int lonly = _allResults.Count(r => r.Category == "Left-Orphan");
+                    int ronly = _allResults.Count(r => r.Category == "Right-Orphan");
+                    int diff = _allResults.Count(r => r.Category == "Different");
+                    ResultCountText =
+                        $"{total:N0} files  ·  Same: {same:N0}  " +
+                        $"Left-only: {lonly:N0}  Right-only: {ronly:N0}  Different: {diff:N0}";
                 }
+
+                // Keep _lastCompareResult in sync so subsequent bulk Delete/Copy
+                // operate on the current state, not the stale original scan result.
+                SyncCompareResultFromAllResults();
 
                 StatusText = $"Deleted from {sides}: {row.Relative}";
             }
@@ -742,6 +773,34 @@ namespace FolderComparerUI.ViewModels
             ResultCountText =
                 $"{total:N0} files  ·  Same: {same:N0}  " +
                 $"Left-only: {lonly:N0}  Right-only: {ronly:N0}  Different: {diff:N0}";
+        }
+
+        /// <summary>
+        /// Rebuilds _lastCompareResult from the current _allResults list so that
+        /// subsequent bulk Delete / Copy operations see the state after any
+        /// right-click quick actions (QuickCopy / QuickDelete) the user performed.
+        ///
+        /// Without this, _lastCompareResult retained the original scan sets —
+        /// meaning bulk operations would try to re-process rows that had already
+        /// been copied or deleted by quick actions.
+        /// </summary>
+        private void SyncCompareResultFromAllResults()
+        {
+            if (_lastCompareResult == null) return;
+
+            // Build fresh sets from the live _allResults list
+            var fresh = new CompareResult();
+            foreach (var row in _allResults)
+            {
+                switch (row.Category)
+                {
+                    case "Same":         fresh.AddSame(row.Relative);         break;
+                    case "Left-Orphan":  fresh.AddLeftOnly(row.Relative);     break;
+                    case "Right-Orphan": fresh.AddRightOnly(row.Relative);    break;
+                    case "Different":    fresh.AddDifferent(row.Relative);    break;
+                }
+            }
+            _lastCompareResult = fresh;
         }
 
         // ════════════════════════════════════════════════════════════════════════
@@ -863,6 +922,22 @@ namespace FolderComparerUI.ViewModels
             SortLeftHeader     = "Left file"  + (property == "LeftFull"  ? arrow : "");
             SortCategoryHeader = "Category"   + (property == "Category"  ? arrow : "");
             SortRightHeader    = "Right file"  + (property == "RightFull" ? arrow : "");
+
+            // Notify so the Clear Sort button shows and CanExecute refreshes
+            OnPropertyChanged(nameof(SortIsActive));
+            RelayCommand.Refresh();
+        }
+
+        private void DoClearSort()
+        {
+            ResultsView.SortDescriptions.Clear();
+            ResultsView.Refresh();
+            _lastSortProp      = null;
+            SortLeftHeader     = "Left file";
+            SortCategoryHeader = "Category";
+            SortRightHeader    = "Right file";
+            OnPropertyChanged(nameof(SortIsActive));
+            RelayCommand.Refresh();
         }
 
         // ════════════════════════════════════════════════════════════════════════
