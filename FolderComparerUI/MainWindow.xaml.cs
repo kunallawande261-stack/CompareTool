@@ -260,5 +260,10 @@ namespace FolderComparerUI
         private static bool IsExt(string path, string ext) =>
             string.Equals(System.IO.Path.GetExtension(path), ext,
                 StringComparison.OrdinalIgnoreCase);
+
+        private void btnSortLeft_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
