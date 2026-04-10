@@ -31,13 +31,16 @@ namespace FolderComparerTests
             var excel    = new Mock<IExcelExportService>();
             var settings = new Mock<ISettingsService>();
             var bc       = new Mock<IBeyondCompareService>();
+            var xmlValidator = new Mock<IXmlValidationService>();
+            var excelFinder  = new Mock<IExcelFindCommonFilesService>();
             var comparer = new FolderComparer();
 
             // Sensible defaults so LoadSettings() doesn't fail
             settings.Setup(s => s.Load()).Returns(new AppSettings());
 
             var vm = new MainViewModel(comparer, settings.Object,
-                                       dialogs.Object, excel.Object, bc.Object);
+                                       dialogs.Object, excel.Object, bc.Object,
+                                       xmlValidator.Object, excelFinder.Object);
             return (vm, dialogs, excel, settings, bc);
         }
 

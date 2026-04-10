@@ -41,6 +41,7 @@
         <conv:CategoryToSymbolConverter  x:Key="CategoryToSymbol"/>
         <conv:StringToVisibilityConverter x:Key="StrToVis"/>
         <conv:StringToBrushConverter     x:Key="StrToBrush"/>
+        <conv:IntToVisibilityConverter   x:Key="IntToVis"/>
         <SolidColorBrush x:Key="SubtleTextBrush" Color="#5E6B78"/>
 
         <Style x:Key="PrimaryActionButtonStyle" TargetType="Button">
@@ -232,6 +233,8 @@
                         <ToggleButton x:Name="btnCopyFlyout"        Content="⧉ Copy"         Style="{StaticResource FlyoutToggleStyle}"/>
                         <ToggleButton x:Name="btnDeleteFlyout"      Content="⊟ Delete"       Style="{StaticResource FlyoutToggleStyle}"/>
                         <ToggleButton x:Name="btnExcelFlyout"       Content="▦ Excel"        Style="{StaticResource FlyoutToggleStyle}"/>
+                        <ToggleButton x:Name="btnCheckXMLFlyout"       Content="📄 XML"        Style="{StaticResource FlyoutToggleStyle}"/>
+                        <ToggleButton x:Name="btnExcelFindCommanFilesFlyout" Content="📊 Common"        Style="{StaticResource FlyoutToggleStyle}"/>
                     </StackPanel>
 
                     <!-- ══════════════ OPTIONS ══════════════ -->
@@ -599,6 +602,203 @@
                         </Border>
                     </Popup>
 
+                    <!-- ══════════════ Check XML ══════════════ -->
+                    <Popup Placement="Bottom" PlacementTarget="{Binding ElementName=btnCheckXMLFlyout}"
+                           IsOpen="{Binding IsChecked, ElementName=btnCheckXMLFlyout, Mode=TwoWay}"
+                           StaysOpen="False" AllowsTransparency="True">
+                        <Border Style="{StaticResource FlyoutBorderStyle}" MinWidth="520" MaxWidth="680">
+                            <StackPanel>
+                                <!-- Header -->
+                                <DockPanel Style="{StaticResource FlyoutHeaderPanelStyle}">
+                                    <Border DockPanel.Dock="Left" Style="{StaticResource FlyoutIconBorderStyle}" Background="#E3F2FD">
+                                        <TextBlock Text="📄" Style="{StaticResource FlyoutIconTextStyle}" Foreground="#1565C0"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="XML Validation" Style="{StaticResource FlyoutTitleStyle}"/>
+                                        <TextBlock Text="Validate all .xml files in a folder tree for syntax errors"
+                                                   FontSize="10" Foreground="#7090AE" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </DockPanel>
+
+                                <!-- Folder input -->
+                                <TextBlock Text="FOLDER" Style="{StaticResource FlyoutSectionLabelStyle}"/>
+                                <Border Style="{StaticResource FlyoutCardStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="64"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="44"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Folder:" VerticalAlignment="Center"
+                                                   FontSize="11" FontWeight="SemiBold" Foreground="#2C4A6A"/>
+                                        <TextBox Grid.Column="1" x:Name="txtXmlFolderPath" Margin="0,0,6,0"
+                                                 Style="{StaticResource PathInputStyle}"
+                                                 Text="{Binding XmlFolderPath, UpdateSourceTrigger=PropertyChanged}"
+                                                 AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"
+                                                 ToolTip="{Binding XmlFolderPath}"/>
+                                        <Button Grid.Column="2" Content="..." Command="{Binding BrowseXmlFolderCommand}"
+                                                Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Results panel — shown after validation runs -->
+                                <TextBlock Text="RESULTS" Style="{StaticResource FlyoutSectionLabelStyle}"/>
+                                <Border Style="{StaticResource FlyoutCardStyle}" Padding="0">
+                                    <StackPanel>
+                                        <!-- Status summary line -->
+                                        <TextBlock Text="{Binding XmlStatusText}"
+                                                   Foreground="{Binding XmlStatusColor, Converter={StaticResource StrToBrush}}"
+                                                   FontSize="11" FontWeight="SemiBold"
+                                                   Margin="12,10,12,6"
+                                                   Visibility="{Binding XmlHasStatus, Converter={StaticResource StrToVis}}"/>
+
+                                        <!-- Error list — each invalid file with name + description + open location -->
+                                        <ListView ItemsSource="{Binding XmlResults}"
+                                                  MaxHeight="220"
+                                                  BorderThickness="0"
+                                                  Background="Transparent"
+                                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                  Visibility="{Binding XmlResults.Count, Converter={StaticResource IntToVis}}">
+                                            <ListView.ItemContainerStyle>
+                                                <Style TargetType="ListViewItem">
+                                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                                    <Setter Property="Padding"         Value="0"/>
+                                                    <Setter Property="Margin"          Value="0"/>
+                                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                                    <Setter Property="BorderBrush"     Value="#EAF0F8"/>
+                                                    <Setter Property="Background"      Value="Transparent"/>
+                                                </Style>
+                                            </ListView.ItemContainerStyle>
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="12,8">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel Grid.Column="0">
+                                                            <!-- File name badge + name -->
+                                                            <DockPanel>
+                                                                <Border DockPanel.Dock="Left"
+                                                                        Background="#FDEDED" BorderBrush="#F5B7B1"
+                                                                        BorderThickness="1" CornerRadius="4"
+                                                                        Padding="5,2" Margin="0,0,8,0">
+                                                                    <TextBlock Text="✗ Invalid" FontSize="9"
+                                                                               FontWeight="Bold" Foreground="#C0392B"/>
+                                                                </Border>
+                                                                <TextBlock Text="{Binding FileName}"
+                                                                           FontSize="11" FontWeight="SemiBold"
+                                                                           Foreground="#1A3A5C"
+                                                                           VerticalAlignment="Center"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           ToolTip="{Binding FilePath}"/>
+                                                            </DockPanel>
+                                                            <!-- Error description -->
+                                                            <TextBlock Text="{Binding Description}"
+                                                                       FontSize="10" Foreground="#7090AE"
+                                                                       Margin="0,4,0,0"
+                                                                       TextWrapping="Wrap"/>
+                                                        </StackPanel>
+                                                        <!-- Open in Explorer button -->
+                                                        <Button Grid.Column="1"
+                                                                Content="📂 Open"
+                                                                Tag="{Binding FilePath}"
+                                                                Click="XmlResultOpenLocation_Click"
+                                                                VerticalAlignment="Center"
+                                                                Margin="10,0,0,0"
+                                                                Height="26" Padding="8,0"
+                                                                Background="#EBF2FA" Foreground="#1A3A5C"
+                                                                BorderBrush="#BACED8" BorderThickness="1"
+                                                                FontSize="10" Cursor="Hand"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+
+                                        <!-- Empty-state hint when no errors yet -->
+                                        <TextBlock Text="Run validation to see results here."
+                                                   FontSize="10" Foreground="#AABCCC" FontStyle="Italic"
+                                                   Margin="12,10,12,10">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding XmlStatusText}" Value="">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Action row -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                                    <Button Content="✔  Validate" Width="110"
+                                            Command="{Binding ValidateXmlCommand}"
+                                            Style="{StaticResource PrimaryActionButtonStyle}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+
+                    <!-- ══════════════ Find Common Files ══════════════ -->
+                    <Popup Placement="Bottom" PlacementTarget="{Binding ElementName=btnExcelFindCommanFilesFlyout}"
+                           IsOpen="{Binding IsChecked, ElementName=btnExcelFindCommanFilesFlyout, Mode=TwoWay}"
+                           StaysOpen="False" AllowsTransparency="True">
+                        <Border Style="{StaticResource FlyoutBorderStyle}" MinWidth="300" MaxWidth="400">
+                            <StackPanel>
+                                <!-- Header -->
+                                <DockPanel Style="{StaticResource FlyoutHeaderPanelStyle}">
+                                    <Border DockPanel.Dock="Left" Style="{StaticResource FlyoutIconBorderStyle}" Background="#E8F5E9">
+                                        <TextBlock Text="📊" Style="{StaticResource FlyoutIconTextStyle}" Foreground="#2E7D32"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Find Common Files" Style="{StaticResource FlyoutTitleStyle}"/>
+                                        <TextBlock Text="Finds values in column A ∩ column B and writes them to column D"
+                                                   FontSize="10" Foreground="#7090AE" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </DockPanel>
+
+                                <!-- How it works note -->
+                                <TextBlock Text="EXCEL FILE" Style="{StaticResource FlyoutSectionLabelStyle}"/>
+                                <Border Style="{StaticResource FlyoutCardStyle}">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="64"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="44"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="File:" VerticalAlignment="Center"
+                                                       FontSize="11" FontWeight="SemiBold" Foreground="#2C4A6A"/>
+                                            <TextBox Grid.Column="1" x:Name="txtExcelFindPath" Margin="0,0,6,0"
+                                                     Style="{StaticResource PathInputStyle}"
+                                                     Text="{Binding ExcelFilePath, UpdateSourceTrigger=PropertyChanged}"
+                                                     AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" Drop="TextBox_Drop"
+                                                     ToolTip="{Binding ExcelFilePath}"/>
+                                            <Button Grid.Column="2" Content="..." Command="{Binding BrowseExcelFileCommand}"
+                                                    Style="{StaticResource SecondaryActionButtonStyle}"/>
+                                        </Grid>
+                                        <Border Background="#EBF5FB" CornerRadius="5" Padding="10,7" Margin="0,10,0,0">
+                                            <TextBlock FontSize="10" Foreground="#1A6A9A" TextWrapping="Wrap">
+                                                <Run FontWeight="SemiBold">How it works: </Run>
+                                                <Run>Reads column A (source) and column B (compare), finds matching values (case-insensitive, header row skipped), and writes the intersection to column D.</Run>
+                                            </TextBlock>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Action row -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                                    <Button Content="▶  Run" Width="100"
+                                            Command="{Binding FindCommonFilesCommand}"
+                                            Style="{StaticResource PrimaryActionButtonStyle}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
                 </Grid>
             </Border>
 

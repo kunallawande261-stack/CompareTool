@@ -27,5 +27,7 @@ namespace FolderComparerUI.Models
         public string? TargetTag          { get; set; } = "5";
         public string? ExcelCategoryTag   { get; set; } = "5";
         public string? CompareModeTag     { get; set; } = "Normal";
+        public string? XmlFolderPath      { get; set; }
+        public string? ExcelFindFilePath  { get; set; }
     }
 }

@@ -24,6 +24,8 @@ namespace FolderComparerUI.ViewModels
         private readonly IDialogService        _dialogs;
         private readonly IExcelExportService   _excel;
         private readonly IBeyondCompareService _bc;
+        private readonly IXmlValidationService          _xmlValidator;
+        private readonly IExcelFindCommonFilesService   _excelFinder;
 
         private CancellationTokenSource? _cts;
         private const int BatchSize    = 200;
@@ -153,6 +155,42 @@ namespace FolderComparerUI.ViewModels
         public string DiffBothVisibility     { get => _diffBothVisibility;     set { SetField(ref _diffBothVisibility, value);     } }
         public string SameCopyVisibility     { get => _sameCopyVisibility;     set { SetField(ref _sameCopyVisibility, value);     } }
 
+        // ── XML validation ────────────────────────────────────────────────────
+        private string _xmlFolderPath = "";
+        public string XmlFolderPath
+        {
+            get => _xmlFolderPath;
+            set { SetField(ref _xmlFolderPath, value); }
+        }
+
+        private readonly ObservableCollection<XmlResultRow> _xmlResultsCollection = new();
+        public  ObservableCollection<XmlResultRow> XmlResults => _xmlResultsCollection;
+
+        private string _xmlStatusText = "";
+        public string XmlStatusText
+        {
+            get => _xmlStatusText;
+            set { SetField(ref _xmlStatusText, value); OnPropertyChanged(nameof(XmlHasStatus)); }
+        }
+
+        private string _xmlStatusColor = "Gray";
+        public string XmlStatusColor
+        {
+            get => _xmlStatusColor;
+            set { SetField(ref _xmlStatusColor, value); OnPropertyChanged(nameof(XmlHasStatus)); }
+        }
+
+        /// <summary>"Visible" once validation has run (status text is non-empty), "Collapsed" before first run.</summary>
+        public string XmlHasStatus => string.IsNullOrEmpty(_xmlStatusText) ? "Collapsed" : "Visible";
+
+        // ── Excel Find Common Files ───────────────────────────────────────────
+        private string _excelFilePath = "";
+        public string ExcelFilePath
+        {
+            get => _excelFilePath;
+            set { SetField(ref _excelFilePath, value); }
+        }
+
         public string ModeTag
         {
             get => _modeTag;
@@ -216,7 +254,11 @@ namespace FolderComparerUI.ViewModels
         public AsyncRelayCommand QuickDeleteLeftCommand  { get; }
         public AsyncRelayCommand QuickDeleteRightCommand { get; }
         public AsyncRelayCommand QuickDeleteBothCommand  { get; }
+        public RelayCommand      BrowseXmlFolderCommand { get; }
+        public AsyncRelayCommand ValidateXmlCommand    { get; }
 
+        public RelayCommand      BrowseExcelFileCommand   { get; }
+        public AsyncRelayCommand FindCommonFilesCommand  { get; }
         // ════════════════════════════════════════════════════════════════════════
         //  CONSTRUCTOR
         // ════════════════════════════════════════════════════════════════════════
@@ -225,7 +267,9 @@ namespace FolderComparerUI.ViewModels
         public MainViewModel()
             : this(new FolderComparer(), new SettingsService(),
                    new DialogService(), new ExcelExportService(),
-                   new BeyondCompareService()) { }
+                   new BeyondCompareService(),
+                   new XmlValidationService(),
+                   new ExcelFindCommanFilesService()) { }
 
         /// <summary>Testable constructor — all dependencies injected via interfaces.</summary>
         public MainViewModel(
@@ -233,13 +277,17 @@ namespace FolderComparerUI.ViewModels
             ISettingsService       settings,
             IDialogService         dialogs,
             IExcelExportService    excel,
-            IBeyondCompareService  bc)
+            IBeyondCompareService           bc,
+            IXmlValidationService           xmlValidator,
+            IExcelFindCommonFilesService     excelFinder)
         {
             _comparer = comparer;
             _settings = settings;
             _dialogs  = dialogs;
             _excel    = excel;
             _bc       = bc;
+            _xmlValidator = xmlValidator;
+            _excelFinder  = excelFinder;
 
             ResultsView = CollectionViewSource.GetDefaultView(_resultItems);
             _comparer.ProgressChanged += OnProgressChanged;
@@ -288,8 +336,192 @@ namespace FolderComparerUI.ViewModels
             QuickDeleteLeftCommand   = new AsyncRelayCommand(() => QuickDeleteAsync(left: true,  right: false), () => SelectedRow != null);
             QuickDeleteRightCommand  = new AsyncRelayCommand(() => QuickDeleteAsync(left: false, right: true),  () => SelectedRow != null);
             QuickDeleteBothCommand   = new AsyncRelayCommand(() => QuickDeleteAsync(left: true,  right: true),  () => SelectedRow != null);
-            UpdateModeVisibility();
-            UpdateLogPathVisibility();
+            // ── XML Validation ───────────────────────────────────────────────────
+            BrowseXmlFolderCommand = new RelayCommand(() =>
+                XmlFolderPath = _dialogs.BrowseFolder(XmlFolderPath) ?? XmlFolderPath);
+
+            ValidateXmlCommand = new AsyncRelayCommand(RunValidateXmlAsync);
+
+            // ── Excel Find Common Files ──────────────────────────────────────────
+            BrowseExcelFileCommand = new RelayCommand(() =>
+                ExcelFilePath = _dialogs.BrowseOpenFile(
+                    "Select Excel file",
+                    "Excel Workbook (*.xlsx)|*.xlsx") ?? ExcelFilePath);
+
+            FindCommonFilesCommand = new AsyncRelayCommand(RunFindCommonFilesAsync);
+        }
+
+        // ════════════════════════════════════════════════════════════════════════
+        //  XML VALIDATION
+        // ════════════════════════════════════════════════════════════════════════
+
+        private async Task RunValidateXmlAsync()
+        {
+            if (string.IsNullOrWhiteSpace(XmlFolderPath))
+            {
+                MessageBox.Show("Please select a folder to validate.",
+                    "No Folder Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Resolve log path: use user's LogPath setting if set, else BaseDirectory
+            string logPath = !string.IsNullOrWhiteSpace(LogPath)
+                ? LogPath
+                : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "XmlValidationLog.txt");
+
+            XmlStatusText  = "Validating…";
+            XmlStatusColor = "DodgerBlue";
+            _xmlResultsCollection.Clear();
+
+            try
+            {
+                var result = await Task.Run(() =>
+                    _xmlValidator.ValidateFolder(XmlFolderPath, logPath));
+
+                _xmlResultsCollection.Clear();
+
+                if (result.TotalScanned == 0)
+                {
+                    XmlStatusText  = "⚠  No XML files found in the selected folder.";
+                    XmlStatusColor = "DarkOrange";
+                }
+                else if (result.Errors.Count == 0)
+                {
+                    XmlStatusText  = $"✅  All {result.TotalScanned} XML file(s) are valid.";
+                    XmlStatusColor = "Green";
+                }
+                else
+                {
+                    XmlStatusText  = $"❌  {result.Errors.Count} invalid file(s) out of {result.TotalScanned}. See list below.";
+                    XmlStatusColor = "#C0392B";
+
+                    foreach (var e in result.Errors)
+                    {
+                        _xmlResultsCollection.Add(new XmlResultRow
+                        {
+                            FileName    = e.FileName,
+                            FilePath    = e.FilePath,
+                            Description = e.Description,
+                            Status      = "Invalid"
+                        });
+                    }
+                }
+
+                AppendLog($"XML Validation — {result.Errors.Count} error(s) in {result.TotalScanned} file(s). Log: {logPath}");
+            }
+            catch (ArgumentException ex)
+            {
+                XmlStatusText  = "❌  Invalid folder path.";
+                XmlStatusColor = "#C0392B";
+                MessageBox.Show(ex.Message, "Invalid Path",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                XmlStatusText  = "❌  Folder not found.";
+                XmlStatusColor = "#C0392B";
+                MessageBox.Show(ex.Message, "Folder Not Found",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                XmlStatusText  = "❌  Access denied.";
+                XmlStatusColor = "#C0392B";
+                MessageBox.Show($"Access denied to folder or log file.\n\n{ex.Message}",
+                    "Access Denied", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (IOException ex)
+            {
+                XmlStatusText  = "❌  I/O error.";
+                XmlStatusColor = "#C0392B";
+                MessageBox.Show($"I/O error during validation.\n\n{ex.Message}",
+                    "I/O Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                XmlStatusText  = "❌  Unexpected error.";
+                XmlStatusColor = "#C0392B";
+                MessageBox.Show($"Validation failed.\n\n{ex.Message}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                // If status is still "Validating…" something failed before setting a real status
+                if (XmlStatusText == "Validating…")
+                {
+                    XmlStatusText  = "❌  Validation did not complete.";
+                    XmlStatusColor = "#C0392B";
+                }
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════════════════
+        //  EXCEL FIND COMMON FILES
+        // ════════════════════════════════════════════════════════════════════════
+
+        private async Task RunFindCommonFilesAsync()
+        {
+            if (string.IsNullOrWhiteSpace(ExcelFilePath))
+            {
+                MessageBox.Show("Please select an Excel file.",
+                    "No File Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!File.Exists(ExcelFilePath))
+            {
+                MessageBox.Show($"File not found:\n{ExcelFilePath}",
+                    "File Not Found", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                StatusText = "Finding common files…";
+
+                int count = await Task.Run(() => _excelFinder.FindCommonFiles(ExcelFilePath));
+
+                StatusText = $"Find Common Files — complete: {count} common file(s) written to column D.";
+                AppendLog($"Find Common Files — {count} common file(s) written to: {ExcelFilePath}");
+
+                MessageBox.Show(
+                    $"✅  Completed successfully.\n\nCommon files found: {count}\n" +
+                    $"Results written to column D of:\n{ExcelFilePath}",
+                    "Find Common Files", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (ArgumentException ex)
+            {
+                MessageBox.Show(ex.Message, "Invalid Input",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (FileNotFoundException ex)
+            {
+                MessageBox.Show(ex.Message, "File Not Found",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (IOException ex)
+            {
+                // Covers "file locked by Excel" from the service
+                MessageBox.Show(ex.Message, "File In Use",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Covers corrupt workbook / missing worksheet
+                MessageBox.Show($"The Excel file appears to be invalid or corrupt.\n\n{ex.Message}",
+                    "Invalid File", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An unexpected error occurred.\n\n{ex.Message}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                // Restore status if it wasn't updated by a success path
+                if (StatusText == "Finding common files…")
+                    StatusText = "Ready";
+            }
         }
 
         // ════════════════════════════════════════════════════════════════════════
@@ -315,6 +547,8 @@ namespace FolderComparerUI.ViewModels
             TargetTag          = s.TargetTag       ?? "5";
             ExcelCategoryTag   = s.ExcelCategoryTag ?? "5";
             CompareModeTag     = s.CompareModeTag   ?? "Normal";
+            XmlFolderPath      = s.XmlFolderPath   ?? "";
+            ExcelFilePath      = s.ExcelFindFilePath ?? "";
             UpdateBcStatus();
         }
 
@@ -338,7 +572,9 @@ namespace FolderComparerUI.ViewModels
                 ModeTag            = ModeTag,
                 TargetTag          = TargetTag,
                 ExcelCategoryTag   = ExcelCategoryTag,
-                CompareModeTag     = CompareModeTag
+                CompareModeTag     = CompareModeTag,
+                XmlFolderPath      = XmlFolderPath,
+                ExcelFindFilePath  = ExcelFilePath
             });
         }
 

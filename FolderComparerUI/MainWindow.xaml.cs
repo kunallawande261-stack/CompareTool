@@ -212,6 +212,11 @@ namespace FolderComparerUI
                 else if (tb == txtLogPath)
                     e.Effects = isDir || (isFile && IsExt(first, ".txt"))
                         ? DragDropEffects.Copy : DragDropEffects.None;
+                else if (tb == txtXmlFolderPath)
+                    e.Effects = isDir ? DragDropEffects.Copy : DragDropEffects.None;
+                else if (tb == txtExcelFindPath)
+                    e.Effects = isFile && IsExt(first, ".xlsx")
+                        ? DragDropEffects.Copy : DragDropEffects.None;
                 else
                     e.Effects = isDir || isFile ? DragDropEffects.Copy : DragDropEffects.None;
             }
@@ -252,6 +257,22 @@ namespace FolderComparerUI
             {
                 if (System.IO.Directory.Exists(first)) VM.ExportPath = first;
             }
+            else if (tb == txtXmlFolderPath)
+            {
+                if (System.IO.Directory.Exists(first))
+                    VM.XmlFolderPath = first;
+                else
+                    MessageBox.Show("Please drop a folder.", "Invalid Drop",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            else if (tb == txtExcelFindPath)
+            {
+                if (System.IO.File.Exists(first) && IsExt(first, ".xlsx"))
+                    VM.ExcelFilePath = first;
+                else
+                    MessageBox.Show("Please drop an .xlsx file.", "Invalid Drop",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         // ── Stub (SelectedItem handled via binding) ───────────────────────────
@@ -260,5 +281,16 @@ namespace FolderComparerUI
         private static bool IsExt(string path, string ext) =>
             string.Equals(System.IO.Path.GetExtension(path), ext,
                 StringComparison.OrdinalIgnoreCase);
+
+        // ── XML results: open the containing folder in Explorer ───────────────
+        private void XmlResultOpenLocation_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Button btn &&
+                btn.Tag is string filePath &&
+                !string.IsNullOrEmpty(filePath))
+            {
+                MainViewModel.RevealInExplorer(filePath);
+            }
+        }
     }
 }
